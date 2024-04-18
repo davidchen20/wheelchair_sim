@@ -1,0 +1,61 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="map_file" default="$(find wheelchair_navigation)/maps/lab_center.yaml"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+
+  <!-- Map server -->
+  <!-- <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/> -->
+
+  <!-- tf from map to odom-->
+  <node pkg="tf" type="static_transform_publisher" name="map_odom_broadcaster" args="0 0 0 0 0 0 1 map odom 100" />
+
+  <!-- Laser scan converter-->
+  <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
+
+    <remap from="cloud_in" to="/velodyne_points"/>
+    <remap from="scan" to="/scan"/>
+    <rosparam>
+        target_frame: velodyne
+        transform_tolerance: 0.01
+        min_height: 0.0
+        max_height: 1.0
+
+        angle_min: -1.5708 
+        angle_max: 1.5708 
+        angle_increment: 0.0087 
+        scan_time: 0.3333
+        range_min: 0.45
+        range_max: 4.0
+        use_inf: true
+        inf_epsilon: 1.0
+
+        concurrency_level: 1
+    </rosparam>
+  </node>
+  <!-- robot localization-->
+  <include file="$(find wheelchair_navigation)/launch/amcl.launch"/>
+
+  <!-- local costmap-->
+  <include file="$(find local_map)/launch/for_simulation.launch" />
+
+  <!-- obstacle information-->
+  <node pkg="obs_param" type="obs_kf"  name="obs_kf" />
+
+  <!-- Global planner-->
+  <!-- <node pkg="global_path_publisher" type="global_path_pub_movebase" output="screen" name="global_path_pub_movebase"/> -->
+
+  <!-- movebase node-->
+  <include file="$(find wheelchair_navigation)/launch/move_base.launch">
+    <!-- <arg name="cmd_vel_topic" default="/cmd_vel_void" /> -->
+  </include>
+
+  <!-- Local Planner-->
+  <node name="local_planner" pkg="local_planner" type="local_planner.py" output="screen">
+      <param name="global_path" value="/move_base/NavfnROS/plan" /> 
+  </node>
+
+  <!-- Controller-->
+  <node name="controller" pkg="local_planner" type="controller.py"/>
+
+</launch>

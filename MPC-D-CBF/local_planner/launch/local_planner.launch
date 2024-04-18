@@ -1,0 +1,7 @@
+<launch>
+    <node name="local_planner" pkg="local_planner" type="local_planner.py" output="screen">
+        <param name="global_path" value="global_path" /> 
+    </node>
+    <node name="controller" pkg="local_planner" type="controller.py"/>
+    <node name="path_recorder" pkg="local_planner" type="path_recorder.py" output="screen"/>
+</launch>

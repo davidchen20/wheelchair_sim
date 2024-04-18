@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "eigen": "cpp",
+        "random": "cpp",
+        "array": "cpp",
+        "bitset": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
+    }
+}

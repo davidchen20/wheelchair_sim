@@ -1,0 +1,8 @@
+# parameters of rvo ros
+neighborDist: 6
+maxNeighbors: 10
+timeHorizon: 10
+timeHorizonObst: 5
+radius: 0.4
+maxSpeed: 4.0                                                                                                                                                                                                                   
+goal_threshold: 0.001

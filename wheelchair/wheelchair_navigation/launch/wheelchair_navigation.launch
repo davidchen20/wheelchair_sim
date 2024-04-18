@@ -1,0 +1,54 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="map_file" default="$(find wheelchair_navigation)/maps/lab_center.yaml"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+
+  <!-- Turtlebot3 -->
+  <!-- <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
+    <arg name="model" value="$(arg model)" />
+  </include> -->
+
+  <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
+
+    <remap from="cloud_in" to="/velodyne_points"/>
+    <remap from="scan" to="/scan"/>
+    <rosparam>
+        target_frame: velodyne
+        transform_tolerance: 0.01
+        min_height: 0.0
+        max_height: 1.0
+
+        angle_min: -1.5708 
+        angle_max: 1.5708 
+        angle_increment: 0.0087 
+        scan_time: 0.3333
+        range_min: 0.45
+        range_max: 4.0
+        use_inf: true
+        inf_epsilon: 1.0
+
+        concurrency_level: 1
+    </rosparam>
+  </node>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+  <node pkg="tf" type="static_transform_publisher" name="map_odom_broadcaster" args="0 0 0 0 0 0 1 map odom 100" />
+
+  <!-- AMCL -->
+  <!-- <include file="$(find wheelchair_navigation)/launch/amcl.launch"/> -->
+
+  <!-- move_base -->
+  <include file="$(find wheelchair_navigation)/launch/move_base.launch">
+    <arg name="model" value="$(arg model)" />
+    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+  </include>
+
+  <!-- rviz -->
+  <!-- <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find wheelchair_navigation)/rviz/wheelchair_navigation.rviz"/>
+  </group> -->
+</launch>

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="x_pos" default="3.54"/>
+    <arg name="y_pos" default="-3.54"/>
+    <arg name="z_pos" default="1"/>
+    <arg name="yaw" default="2.355"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find wheelchair_description)/urdf/wheelchair_1.urdf.xacro" />
+
+    <include file="$(find wheelchair_description)/launch/includes/description_1.launch.xml">
+    </include>
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="50.0" />
+    </node>
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model wheelchair -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -Y $(arg yaw) -param robot_description" />
+
+
+    <node pkg="tf" type="static_transform_publisher" name="world_odom_broadcaster" args="0 0 0 0 0 0 1 map odom 100" />
+
+    <include file="$(find local_map)/launch/for_simulation.launch" />
+
+    <include file="$(find rvo_ros)/simulation/rvo_gazebo_agent.launch" />
+
+    <!-- <include file="$(find scene)/launch/movetest_node.launch" /> -->
+
+    <!-- <include file="$(find rvo_ros)/simulation/rvo_gazebo_agent.launch"/> -->
+
+    <node pkg="obs_param" type="obs_kf" name="obs_kf" />
+
+    <!-- <include file="$(find global_path_publisher)/launch/pub_global_path.launch" /> -->
+    <node pkg="global_path_publisher" type="global_path_pub" output="screen" name="global_path_pub">  
+        <param name="start_x" value="3.54"/> 
+        <param name="start_y" value="-3.54"/>  
+        <param name="end_x" value="-3.54"/>  
+        <param name="end_y" value="3.54"/>   
+    </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scene)/rviz_config/simulation.rviz" required="true" />
+
+</launch>

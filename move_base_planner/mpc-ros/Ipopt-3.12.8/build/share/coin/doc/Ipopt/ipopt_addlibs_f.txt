@@ -1,0 +1,1 @@
+            -L/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib -L/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib -lipopt -llapack -lblas -ldl -lcoinmumps -lblas -lcoinmetis             -lstdc++ -lm

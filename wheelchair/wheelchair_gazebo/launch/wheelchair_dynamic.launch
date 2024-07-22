@@ -39,6 +39,6 @@
         <param name="end_y" value="3.54"/>   
     </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scene)/rviz_config/simulation.rviz" required="true" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scene)/rviz_config/simulation_original.rviz" required="true" />
 
 </launch>

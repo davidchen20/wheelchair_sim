@@ -1,16 +1,20 @@
 <launch>
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-  <arg name="x_pos" default="8.000881"/>
-  <arg name="y_pos" default="14.679939"/>
+  <arg name="x_pos" default="6.224980"/>
+  <arg name="y_pos" default="12.812600"/>
   <arg name="z_pos" default="0.499995"/>
-  <arg name="yaw" default="-1.6104512"/>
+  <arg name="yaw" default="3.14"/>
+  <!-- <arg name="x_pos" default="0.150677"/>
+  <arg name="y_pos" default="7.291785"/>
+  <arg name="z_pos" default="0.499995"/>
+  <arg name="yaw" default="0"/> -->
 
   <!-- <arg name="x_pos" default="0"/>
   <arg name="y_pos" default="0"/>
   <arg name="z_pos" default="0"/>
   <arg name="yaw" default="-1.6104512"/>  -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find wheelchair_gazebo)/worlds/test_scene_1.world"/>
+    <arg name="world_name" value="$(find wheelchair_gazebo)/worlds/GGB_world_empty.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>
@@ -30,5 +34,5 @@
 
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model wheelchair -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -Y $(arg yaw) -param robot_description" />
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find wheelchair_gazebo)/rviz/wheelchair_model.rviz"/>
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find wheelchair_gazebo)/rviz/wheelchair_model.rviz" output="screen"/> -->
 </launch>

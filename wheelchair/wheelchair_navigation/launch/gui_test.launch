@@ -1,0 +1,4 @@
+<launch>
+  <node name="map_server" pkg="map_server" type="map_server" args="/home/yfx/wheelchair_ws/src/wheelchair/wheelchair_navigation/maps/GGB_map.yaml" />
+  <node name="gui" pkg="wheelchair_navigation" type="gui.py" output="screen" />
+</launch>

@@ -13,16 +13,31 @@
 
 #include <eigen3/Eigen/Dense>
 
+#include "geometry_msgs/Point.h" //zbedit3
+#include <tf/transform_listener.h> //zbedit3
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <turtlesim/Pose.h>
+#include <tf2_ros/transform_listener.h>
+
 using Obstacle = std::vector<Eigen::Array2i>;
 
 struct Ellipse
 {
-  double semimajor; // Length of semi-major axis
-  double semiminor; // Length of semi-minor axis
+  // double semimajor; // Length of semi-major axis //original
+  // double semiminor; // Length of semi-minor axis //original
   double cx;        // x-coordinate of center
   double cy;        // y-coordinate of center
   double theta;     // Rotation angle
-  int label;        // label of obstacle
+  double velocity; //zbedit3
+  double sigma_h; //zbedit3
+  double sigma_s; //zbedit3
+  double sigma_r; //zbedit3
+  double orient_rad; //zbedit3
+  ros::Time time_stamp; //zbedit3
+  // ros::Time time_stamp = ros::Time::now(); //zbedit3
+  int label;        // label of obstacle 
   double variance;  // variance of ab^1.3
 };
 
@@ -52,27 +67,39 @@ bool get_min_area_ellipse(const std::vector<Point> &pts, Ellipse &ellipse)
     return false;
   // r*x^2 + s*y^2 + t*x*y + u*x + v*y + w = 0
   double r, s, t, u, v, w;
+  std::cout<<"ZBCHECK: "<<"r, s, t, u, v, w: "<<r<<", "<<s<<", "<<t<<", "<<u<<", "<<v<<", "<<w<<std::endl;
   me.ellipse().double_coefficients(r, s, t, u, v, w);
-  double a = -std::sqrt(2 * (r * v * v + s * u * u - t * u * v + (t * t - 4 * r * s) * w) *
-                        ((r + s) + std::sqrt((r - s) * (r - s) + t * t))) /
-             (t * t - 4 * r * s);
-  double b = -std::sqrt(2 * (r * v * v + s * u * u - t * u * v + (t * t - 4 * r * s) * w) *
-                        ((r + s) - std::sqrt((r - s) * (r - s) + t * t))) /
-             (t * t - 4 * r * s);
+  //original:
+  // double a = -std::sqrt(2 * (r * v * v + s * u * u - t * u * v + (t * t - 4 * r * s) * w) *
+  //                       ((r + s) + std::sqrt((r - s) * (r - s) + t * t))) /
+  //            (t * t - 4 * r * s);
+  // double b = -std::sqrt(2 * (r * v * v + s * u * u - t * u * v + (t * t - 4 * r * s) * w) *
+  //                       ((r + s) - std::sqrt((r - s) * (r - s) + t * t))) /
+  //            (t * t - 4 * r * s);
   double cx = (2 * s * u - t * v) / (t * t - 4 * r * s);
   double cy = (2 * r * v - t * u) / (t * t - 4 * r * s);
+  std::cout<<"ZBCHECK: "<<"cx, cy: "<<cx<<", "<<cy<<std::endl;
   double theta;
+  double velocity = 0; //zbedit3
+  double orient_rad = 0; //zbedit3
+  double sigma_h = 0.5; //zbedit3
+  double sigma_s = (2.0/3.0) * sigma_h; //zbedit3
+  double sigma_r = 0.5 * sigma_h; //zbedit3
+  ros::Time time_stamp = ros::Time::now(); //zbedit3
   if (t != 0)
     theta = std::atan(1 / t * (s - r - std::sqrt((r - s) * (r - s) + t * t)));
   else if (r < s)
     theta = 0;
   else
     theta = M_PI;
-  if (b > a)
-  {
-    swap(a, b);
-    theta += M_PI / 2;
-  }
+  
+  //original:
+  // if (b > a)
+  // {
+  //   swap(a, b);
+  //   theta += M_PI / 2;
+  // }
+
   // if (t > 0.001)
   //   theta = std::atan(t / (s - r - std::sqrt((r - s) * (r - s) + t * t)));
   // else if (r - s < 0.001)
@@ -80,7 +107,8 @@ bool get_min_area_ellipse(const std::vector<Point> &pts, Ellipse &ellipse)
   // else
   //   theta = M_PI / 2;
 
-  ellipse = Ellipse{a, b, cx, cy, theta};
+  // ellipse = Ellipse{a, b, cx, cy, theta}; //original
+  ellipse = Ellipse{cx, cy, theta, velocity, sigma_h, sigma_s, sigma_r, orient_rad, time_stamp}; //zbedit3
   return true;
 }
 
@@ -125,48 +153,49 @@ Obstacle down_sample_points(const Obstacle &pts, int &x_min, int &y_min, int &x_
 vector<Ellipse> get_ellipse_array(std::vector<Obstacle> &seg_obs, const grid_map::GridMap &localmap_obs)
 {
   std::vector<Ellipse> result;
-
   for (const auto &obs : seg_obs)
   {
-    if (obs.size() > 500)
+    if (obs.size() > 500){
       continue;
+    }
     int x_min = localmap_x_size * _inv_resolution, y_min = localmap_x_size * _inv_resolution, x_max = 0, y_max = 0;
     Obstacle ds_pts = down_sample_points(obs, x_min, y_min, x_max, y_max);
-    if (x_max - x_min > 3 * _inv_resolution || y_max - y_min > 3 * _inv_resolution)
+    if (x_max - x_min > 3 * _inv_resolution || y_max - y_min > 3 * _inv_resolution){
       continue;
-
+    }
     vector<Point> pts;
     for (const auto &pt : ds_pts)
     {
-      if (pt(0) >= localmap_x_size / resolution || pt(1) >= localmap_x_size / resolution)
+      if (pt(0) >= localmap_x_size / resolution || pt(1) >= localmap_x_size / resolution){
         continue;
-
+      }
       Vector3d pos;
       localmap_obs.getPosition3("elevation", pt, pos);
       pts.emplace_back(pos(0), pos(1));
     }
-
+      
     Ellipse ellipse;
     if (!get_min_area_ellipse(pts, ellipse))
     {
       Eigen::Array2i grid_center((x_max + x_min) / 2, (y_min + y_max) / 2);
-
       float radius = sqrt((x_max - x_min) * (x_max - x_min) + (y_max - y_min) * (y_max - y_min)) * resolution / 2;
       Vector3d pos;
       localmap_obs.getPosition3("gradient_map", grid_center, pos);
       ellipse.cx = pos(0);
       ellipse.cy = pos(1);
-      ellipse.semimajor = max(radius, 2 * resolution);
-      ellipse.semiminor = resolution;
+      // ellipse.semimajor = max(radius, 2 * resolution); //original
+      // ellipse.semiminor = resolution; //original
       ellipse.theta = (x_max - x_min == 0) ? M_PI / 2 : (std::atan((y_max - y_min) / (x_max - x_min)) + M_PI / 2);
+      // ellipse.time_stamp = ros::Time::now(); //zbedit3
     }
 
-    if (ellipse.semimajor <= 20 && ellipse.semiminor <= 20)
+    // if (ellipse.semimajor <= 20 && ellipse.semiminor <= 20) //original
       result.push_back(ellipse);
   }
   return result;
 }
 
+//original:
 void ab_variance_calculation(vector<Ellipse> &input_vector)
 {
   static vector<boost::circular_buffer<Eigen::Vector2d>> list;
@@ -180,7 +209,8 @@ void ab_variance_calculation(vector<Ellipse> &input_vector)
       for (size_t i = current_size; i < label; i++)
         list[i].set_capacity(10);
     }
-    list[label - 1].push_back(Eigen::Vector2d(input.semimajor, input.semiminor));
+    // list[label - 1].push_back(Eigen::Vector2d(input.semimajor, input.semiminor)); //original (important)
+    list[label - 1].push_back(Eigen::Vector2d(input.sigma_h+input.sigma_r, 2*input.sigma_s)); //zbedit3
     size_t list_size = list[label - 1].size();
     MatrixXd vac_mat(2, list_size);
     for (size_t i = 0; i < list_size; i++)
@@ -194,22 +224,47 @@ void ab_variance_calculation(vector<Ellipse> &input_vector)
   }
 }
 
+void asym_guass_calculation(vector<Ellipse> &input_curr, vector<Ellipse> &input_prev)
+{
+  for (int i = 0; i < input_curr.size(); i++){
+    input_curr[i].velocity = 0;
+    input_curr[i].orient_rad = 0; 
+    double dt = 0;
+    for (const auto &prev : input_prev) {
+      if (input_curr[i].label == prev.label) {
+        // dt = input_curr[i].time_stamp.toSec() - prev.time_stamp.toSec();
+        // dt = (double)((input_curr[i].time_stamp - prev.time_stamp).toNSec()*pow(10,-9));
+        dt = (double)((input_curr[i].time_stamp - prev.time_stamp).toSec());
+        input_curr[i].velocity = sqrt(pow(input_curr[i].cx - prev.cx, 2) + pow(input_curr[i].cy - prev.cy, 2))/dt;
+        input_curr[i].orient_rad = std::atan2((input_curr[i].cy-prev.cy),(input_curr[i].cx-prev.cx));
+        break; //found velocity so no point in continuing the for loop
+      }
+    }
+    input_curr[i].sigma_h = std::max(2 * input_curr[i].velocity, 0.5);
+    input_curr[i].sigma_s = (2.0/3.0) * input_curr[i].sigma_h;
+    input_curr[i].sigma_r = 0.5 * input_curr[i].sigma_h;
+  }
+}
+
 void visEllipse(const std::vector<Ellipse> &obs_ellipses, ros::Publisher &_Ellipses_vis_pub)
 {
   // ellipse
   visualization_msgs::MarkerArray ellipse_vis;
 
   visualization_msgs::Marker shape_vis;
-  shape_vis.header.frame_id = "map";
+  shape_vis.header.frame_id = "map"; //original
+  // shape_vis.header.frame_id = "base_link"; //zbedit3
   shape_vis.header.stamp = ros::Time::now();
   shape_vis.ns = "ellipse";
-  shape_vis.type = visualization_msgs::Marker::CYLINDER;
+  // shape_vis.type = visualization_msgs::Marker::CYLINDER; //original
+  shape_vis.type = visualization_msgs::Marker::LINE_STRIP; //zbedit3
   shape_vis.action = visualization_msgs::Marker::ADD;
   shape_vis.lifetime = ros::Duration(0.15);
 
   // number
   visualization_msgs::Marker text_vis;
-  text_vis.header.frame_id = "map";
+  text_vis.header.frame_id = "map"; //original
+  // text_vis.header.frame_id = "base_link"; //zbedit3
   text_vis.header.stamp = ros::Time::now();
   text_vis.ns = "text";
   text_vis.action = visualization_msgs::Marker::ADD;
@@ -224,34 +279,41 @@ void visEllipse(const std::vector<Ellipse> &obs_ellipses, ros::Publisher &_Ellip
   for (size_t i = 0; i < obs_ellipses.size(); i++)
   {
     shape_vis.color.a = 0.9;
-    if (obs_ellipses[i].variance < 0.0007)
-    {
-      shape_vis.color.r = 0;
-      shape_vis.color.g = 0;
-      shape_vis.color.b = 1;
-    }
-    else if (obs_ellipses[i].variance > 0.005)
-    {
-      shape_vis.color.r = 1;
-      shape_vis.color.g = 0;
-      shape_vis.color.b = 0;
-    }
-    else
-    {
-      float dt = (obs_ellipses[i].variance - 0.0007) / (0.005 - 0.0007);
-      if (dt > 0.5)
-      {
-        shape_vis.color.r = 1;
-        shape_vis.color.g = 1 - dt;
-        shape_vis.color.b = 1 - dt;
-      }
-      else
-      {
-        shape_vis.color.r = dt;
-        shape_vis.color.g = dt;
-        shape_vis.color.b = 1;
-      }
-    }
+
+    //original:
+    // if (obs_ellipses[i].variance < 0.0007)
+    // {
+    //   shape_vis.color.r = 0;
+    //   shape_vis.color.g = 0;
+    //   shape_vis.color.b = 1;
+    // }
+    // else if (obs_ellipses[i].variance > 0.005)
+    // {
+    //   shape_vis.color.r = 1;
+    //   shape_vis.color.g = 0;
+    //   shape_vis.color.b = 0;
+    // }
+    // else
+    // {
+    //   float dt = (obs_ellipses[i].variance - 0.0007) / (0.005 - 0.0007);
+    //   if (dt > 0.5)
+    //   {
+    //     shape_vis.color.r = 1;
+    //     shape_vis.color.g = 1 - dt;
+    //     shape_vis.color.b = 1 - dt;
+    //   }
+    //   else
+    //   {
+    //     shape_vis.color.r = dt;
+    //     shape_vis.color.g = dt;
+    //     shape_vis.color.b = 1;
+    //   }
+    // }
+
+    //zbedit3:
+    shape_vis.color.r = 0;
+    shape_vis.color.g = 0;
+    shape_vis.color.b = 1;
 
     shape_vis.id = i;
     shape_vis.pose.orientation.x = 0.0;
@@ -261,9 +323,97 @@ void visEllipse(const std::vector<Ellipse> &obs_ellipses, ros::Publisher &_Ellip
     shape_vis.pose.position.x = obs_ellipses[i].cx;
     shape_vis.pose.position.y = obs_ellipses[i].cy;
     shape_vis.pose.position.z = -0.0;
-    shape_vis.scale.x = 2 * obs_ellipses[i].semimajor;
-    shape_vis.scale.y = 2 * obs_ellipses[i].semiminor;
-    shape_vis.scale.z = 0.75;
+    //original:
+    // shape_vis.scale.x = 2 * obs_ellipses[i].semimajor;
+    // shape_vis.scale.y = 2 * obs_ellipses[i].semiminor;
+    // shape_vis.scale.z = 0.75;
+    // shape_vis.scale.x = obs_ellipses[i].sigma_s; //zbedit3
+    // shape_vis.scale.y = obs_ellipses[i].sigma_s; //zbedit3
+    // shape_vis.scale.z = 1.0; //zbedit3
+    shape_vis.scale.x = 0.05; //zbedit3
+    std::cout<<"ZBCheck4"<<std::endl;
+    //zbedit3: assign sigma value based on orientation:
+    //-----------------------------------------------------------------------------------
+    double vel_ang = fmod(obs_ellipses[i].orient_rad + 2 * M_PI,  2 * M_PI); //zbtask: Is it 30+sig_h?
+    double ray_ang = 0;
+    double delta_ang = M_PI / 30;
+    double cons = 0.354163;
+
+    tf::TransformListener listener_;
+    while (ray_ang <= 2 * M_PI){
+      int flag = int(ray_ang / (M_PI / 2));
+
+      double prev_variance;
+      double next_variance;
+
+      if (flag == 0){
+          prev_variance = obs_ellipses[i].sigma_h;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+      else if( flag == 1){
+          prev_variance = obs_ellipses[i].sigma_r;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+      else if( flag == 2){
+          prev_variance = obs_ellipses[i].sigma_r;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+      else{
+          prev_variance = obs_ellipses[i].sigma_h;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+
+      double dist = sqrt(cons / ((cos(ray_ang) *cos(ray_ang) / (2 * prev_variance)) + (sin(ray_ang) *sin(ray_ang) / (2 * next_variance))));
+
+      double total_angle = ray_ang + vel_ang;
+
+      double x_offset = dist * cos(total_angle);
+      double y_offset = dist * sin(total_angle);
+
+      geometry_msgs::Point edge_point;
+      geometry_msgs::Point edge_point_temp;
+
+      edge_point.x = obs_ellipses[i].cx + x_offset; //zborig
+      edge_point.y = obs_ellipses[i].cy + y_offset; //zborig
+
+      // edge_point_temp.x = obs_ellipses[i].cx + x_offset;
+      // edge_point_temp.y = obs_ellipses[i].cy + y_offset;
+      
+      // edge_point.x = edge_point_temp.x*cos(2.36) - edge_point_temp.y*sin(2.36) +3.65;
+      // edge_point.y = edge_point_temp.x*sin(2.36) + edge_point_temp.y*cos(2.36) -3.75;
+      // edge_point.x = edge_point_temp.x*cos(-2.36) - edge_point_temp.y*sin(-2.36) +4;
+      // edge_point.y = edge_point_temp.x*sin(-2.36) + edge_point_temp.y*cos(-2.36) +3;
+
+      edge_point.z = 0;
+      std::cout<<"ZBCHECK_e: "<<"edge_point.x, edge_point.y: "<<edge_point.x<<", "<<edge_point.y<<std::endl;
+
+      // try{
+      //   tf::StampedTransform req_to_rob;
+      //   // listener_.lookupTransform(shape_vis.header.frame_id ="map", shape_vis.header.frame_id ="base_footprint", ros::Time(0), req_to_rob);
+      //   listener_.lookupTransform("map", "base_link", ros::Time(0), req_to_rob);
+      //   // std::cout<<"ZBCHECK_e: "<<"transform: "<<req_to_rob<<std::endl;
+      // }
+      // catch(...){
+      //   std::cout<<"ZBCHECK_e: "<<"transform failed "<<std::endl;
+      // }
+
+      // try{
+
+      //   tf2_ros::Buffer tfBuffer;
+      //   tf2_ros::TransformListener tfListener(tfBuffer);
+      //   geometry_msgs::TransformStamped transformStamped;
+      //   transformStamped = tfBuffer.lookupTransform("base_link", "map", ros::Time(0));
+      // } 
+      // catch (tf2::TransformException &ex) {
+      //   ROS_WARN("Could NOT transform turtle2 to turtle1: %s", ex.what());
+      // }
+
+      shape_vis.points.push_back(edge_point);
+
+      ray_ang += delta_ang;
+    }
+    //-----------------------------------------------------------------------------------
+    std::cout<<"ZBCheck5"<<std::endl;
 
     text_vis.id = obs_ellipses[i].label;
 

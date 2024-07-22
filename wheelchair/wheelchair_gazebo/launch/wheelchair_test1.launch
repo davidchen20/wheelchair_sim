@@ -1,9 +1,9 @@
 <launch>
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-  <arg name="x_pos" default="8.000881"/>
-  <arg name="y_pos" default="14.679939"/>
+  <arg name="x_pos" default="6.224980"/>
+  <arg name="y_pos" default="12.812600"/>
   <arg name="z_pos" default="0.499995"/>
-  <arg name="yaw" default="-1.6104512"/>
+  <arg name="yaw" default="3.14"/>
 
   <!-- <arg name="x_pos" default="0"/>
   <arg name="y_pos" default="0"/>
@@ -20,7 +20,7 @@
 
   <param name="robot_description" command="$(find xacro)/xacro --inorder $(find wheelchair_description)/urdf/wheelchair.urdf.xacro" />
 
-  <include file="$(find wheelchair_description)/launch/includes/description.launch.xml">
+  <include file="$(find wheelchair_description)/launch/includes/description_1.launch.xml">
     <arg name="model" value="$(arg model)" />
   </include>
 

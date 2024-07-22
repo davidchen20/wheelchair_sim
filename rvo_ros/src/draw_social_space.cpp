@@ -105,6 +105,7 @@ void rvo_stateCallback(const gazebo_msgs::WorldState::ConstPtr &sub_msg)
             edge_point.x = agent_pose.position.x + x_offset;
             edge_point.y = agent_pose.position.y + y_offset;
             edge_point.z = 0;
+            // std::cout<<"ZBCHECK_dsp: "<<"edge_point.x, edge_point.y: "<<edge_point.x<<", "<<edge_point.y<<std::endl;
             
             mk.points.push_back(edge_point);
 

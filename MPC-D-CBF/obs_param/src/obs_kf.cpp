@@ -16,21 +16,27 @@ const size_t obs_kf_buffer_size = 100;
 
 struct Ellipse
 {
-  double semimajor;  // Length of semi-major axis
-  double semiminor;  // Length of semi-minor axis
+  // double semimajor;  // Length of semi-major axis //original
+  // double semiminor;  // Length of semi-minor axis //original
   double cx;         // x-coordinate of center
   double cy;         // y-coordinate of center
   double theta;      // Rotation angle
+  double sigma_h; //zbedit3
+  double sigma_s; //zbedit3
+  double sigma_r; //zbedit3
 };
 
 struct obs_param
 {
   float x = 0.0;
   float y = 0.0;
-  float a = 0.0;
-  float b = 0.0;
+  // float a = 0.0; //original
+  // float b = 0.0; //original
   float theta = 0.0;
   float mea_cov;
+  float sigma_h = 0.0; //zbedit3
+  float sigma_s = 0.0; //zbedit3
+  float sigma_r = 0.0; //zbedit3
 };
 
 class obs_kf
@@ -59,7 +65,8 @@ public:
 obs_kf::obs_kf() : N(25)
 {
   ka.m_StateSize = 9;
-  ka.m_MeaSize = 5;
+  // ka.m_MeaSize = 5; //original
+  ka.m_MeaSize = 6; //zbedit3
   ka.m_USize = 9;
 
   T = 0.1;
@@ -81,18 +88,28 @@ obs_kf::obs_kf() : N(25)
 
   float R_cov = 0.0008;  //仿真 0.00005  实物  0.000003
 
-  R.resize(5, 5);
+  // R.resize(5, 5); //original
+  R.resize(6, 6); //zbedit3
   R.setZero();
 
-  R(0, 0) = R_cov;
-  R(1, 1) = R_cov;
-  R(2, 2) = 10 * R_cov;
-  R(3, 3) = 10 * R_cov;
-  R(4, 4) = 0.00000001 * R_cov;
+  //original:
+  // R(0, 0) = R_cov;
+  // R(1, 1) = R_cov;
+  // R(2, 2) = 10 * R_cov;
+  // R(3, 3) = 10 * R_cov;
+  // R(4, 4) = 0.00000001 * R_cov;
+  //zbedit3:
+  R(0, 0) = R_cov; //x
+  R(1, 1) = R_cov; //y
+  R(2, 2) = 0.0001 * R_cov; //sigma_h
+  R(3, 3) = 0.0001 * R_cov; //sigma_s
+  R(4, 4) = 0.0001 * R_cov; //sigma_r
+  R(5, 5) = 0.00000001 * R_cov;
 
   A.resize(9, 9);
   A.setIdentity();
-  A(0, 5) = A(1, 6) = T;
+  // A(0, 5) = A(1, 6) = T; //original
+  A(0, 6) = A(1, 7) = T; //zbedit3
 
   //     A<<1,0,0,0,0,T,0,0.5*T*T,0,
   //             0,1,0,0,0,0,T,0,0.5*T*T,
@@ -107,10 +124,12 @@ obs_kf::obs_kf() : N(25)
   B.resize(9, 9);
   B.setZero();
 
-  H.resize(5, 9);
+  // H.resize(5, 9); //original
+  H.resize(6, 9); //zbedit3
   H.setIdentity();
 
-  z0.resize(5);
+  // z0.resize(5); //original
+  z0.resize(6); //zbedit3
   z0.setZero();
 
   u_v.resize(9);
@@ -127,7 +146,8 @@ void obs_kf::obs_predict()
 
   if (num == 1)
   {
-    ka.m_x << param_list[0].x, param_list[0].y, param_list[0].a, param_list[0].b, param_list[0].theta, 0, 0, 0, 0;
+    // ka.m_x << param_list[0].x, param_list[0].y, param_list[0].a, param_list[0].b, param_list[0].theta, 0, 0, 0, 0; //original
+    ka.m_x << param_list[0].x, param_list[0].y, param_list[0].sigma_h, param_list[0].sigma_s, param_list[0].sigma_r, param_list[0].theta, 0, 0, 0; //zbedit3
     ka.m_P = P0;
   }
   else
@@ -143,8 +163,10 @@ void obs_kf::obs_predict()
     ka.m_R(0, 0) = _k_cov * R(0, 0);
     ka.m_R(1, 1) = _k_cov * R(1, 1);
 
-    VectorXd z(5);
-    z << param_list.back().x, param_list.back().y, param_list.back().a, param_list.back().b, param_list.back().theta;
+    // VectorXd z(5); //original
+    VectorXd z(6); //zbedit3
+    // z << param_list.back().x, param_list.back().y, param_list.back().a, param_list.back().b, param_list.back().theta; //original
+    z << param_list.back().x, param_list.back().y, param_list.back().sigma_h, param_list.back().sigma_s, param_list.back().sigma_r, param_list.back().theta; //zbedit3
 
     ka.Predict_State();
     ka.Predict_Cov();
@@ -163,16 +185,23 @@ void obs_kf::obs_predict()
       obs_param pred;
       float x_conf = 0.95 * sqrt(ka_tmp.m_P(0, 0));
       float y_conf = 0.95 * sqrt(ka_tmp.m_P(1, 1));
-      float a_conf = 0.95 * sqrt(ka_tmp.m_P(2, 2));
-      float b_conf = 0.95 * sqrt(ka_tmp.m_P(3, 3));
+      // float a_conf = 0.95 * sqrt(ka_tmp.m_P(2, 2)); //original
+      // float b_conf = 0.95 * sqrt(ka_tmp.m_P(3, 3)); //original
+      float sigma_h_conf = 0.95 * sqrt(ka_tmp.m_P(2, 2)); //zbedit3
+      float sigma_s_conf = 0.95 * sqrt(ka_tmp.m_P(3, 3)); //zbedit3
+      float sigma_r_conf = 0.95 * sqrt(ka_tmp.m_P(4, 4)); //zbedit3
       float pos_conf = max(x_conf, y_conf);
-      float ab_conf = max(a_conf, b_conf);
+      // float ab_conf = max(a_conf, b_conf); //original
 
       pred.x = ka_tmp.m_x(0);
       pred.y = ka_tmp.m_x(1);
-      pred.a = ka_tmp.m_x(2) + pos_conf + ab_conf;
-      pred.b = ka_tmp.m_x(3) + pos_conf + ab_conf;
-      pred.theta = ka.m_x(4);
+      // pred.a = ka_tmp.m_x(2) + pos_conf + ab_conf; //original
+      // pred.b = ka_tmp.m_x(3) + pos_conf + ab_conf; //original      
+      // pred.theta = ka.m_x(4); //original
+      pred.sigma_h = ka_tmp.m_x(2); //zbedit3
+      pred.sigma_s = ka_tmp.m_x(3); //zbedit3
+      pred.sigma_r = ka_tmp.m_x(4); //zbedit3
+      pred.theta = ka.m_x(5); //zbedit3
 
       pred_list.push_back(pred);
     }
@@ -187,7 +216,8 @@ void visEllipse(const vector<Ellipse>& obs_ellipses)
   mk.header.frame_id = "map";
   mk.header.stamp = ros::Time::now();
   mk.ns = "ellipse";
-  mk.type = visualization_msgs::Marker::CYLINDER;
+  // mk.type = visualization_msgs::Marker::CYLINDER; //original
+  mk.type = visualization_msgs::Marker::LINE_STRIP; //zbedit3
   mk.action = visualization_msgs::Marker::ADD;
   mk.lifetime = ros::Duration(0.5);
 
@@ -209,9 +239,16 @@ void visEllipse(const vector<Ellipse>& obs_ellipses)
     mk.pose.position.y = obs_ellipses[i].cy;
     mk.pose.position.z = -0.3;
 
-    mk.scale.x = 2 * obs_ellipses[i].semimajor;
-    mk.scale.y = 2 * obs_ellipses[i].semiminor;
-    mk.scale.z = 0.1;
+    //original:
+    // mk.scale.x = 2 * obs_ellipses[i].semimajor;
+    // mk.scale.y = 2 * obs_ellipses[i].semiminor;
+    // mk.scale.z = 0.1;
+
+    //zbedit3:
+    // mk.scale.x = obs_ellipses[i].sigma_h;
+    // mk.scale.y = obs_ellipses[i].sigma_s;
+    // mk.scale.z = 1.0;
+    mk.scale.x = 0.05;
 
     ellipse_vis.markers.push_back(mk);
   }
@@ -231,15 +268,21 @@ void curve_fitting(obs_kf& obs, std_msgs::Float32MultiArray& obs_pub, vector<Ell
     Ellipse ellipse;
     ellipse.cx = obs.pred_list[i].x;
     ellipse.cy = obs.pred_list[i].y;
-    ellipse.semimajor = obs.pred_list[i].a;
-    ellipse.semiminor = obs.pred_list[i].b;
+    // ellipse.semimajor = obs.pred_list[i].a; //original
+    // ellipse.semiminor = obs.pred_list[i].b; //original
+    ellipse.sigma_h = obs.pred_list[i].sigma_h; //zbedit3
+    ellipse.sigma_s = obs.pred_list[i].sigma_s; //zbedit3
+    ellipse.sigma_r = obs.pred_list[i].sigma_r; //zbedit3
     ellipse.theta = obs.pred_list[i].theta;
     ellipses_array.push_back(ellipse);
 
     obs_pub.data.push_back(obs.pred_list[i].x);
     obs_pub.data.push_back(obs.pred_list[i].y);
-    obs_pub.data.push_back(obs.pred_list[i].a);
-    obs_pub.data.push_back(obs.pred_list[i].b);
+    // obs_pub.data.push_back(obs.pred_list[i].a); //original
+    // obs_pub.data.push_back(obs.pred_list[i].b); //original
+    obs_pub.data.push_back(obs.pred_list[i].sigma_h); //zbedit3
+    obs_pub.data.push_back(obs.pred_list[i].sigma_s); //zbedit3
+    obs_pub.data.push_back(obs.pred_list[i].sigma_r); //zbedit3
     obs_pub.data.push_back(obs.pred_list[i].theta);
   }
 }
@@ -261,10 +304,18 @@ void obscb(const std_msgs::Float32MultiArray::ConstPtr& msg)
     obs_param _obs_tmp;
     _obs_tmp.x = msg->data[7 * i];
     _obs_tmp.y = msg->data[7 * i + 1];
-    _obs_tmp.a = msg->data[7 * i + 2];
-    _obs_tmp.b = msg->data[7 * i + 3];
-    _obs_tmp.theta = msg->data[7 * i + 4];
-    _obs_tmp.mea_cov = msg->data[7 * i + 6];
+
+    //original:
+    // _obs_tmp.a = msg->data[7 * i + 2];
+    // _obs_tmp.b = msg->data[7 * i + 3];
+    // _obs_tmp.theta = msg->data[7 * i + 4];
+    // _obs_tmp.mea_cov = msg->data[7 * i + 6];
+    //zbedit3:
+    _obs_tmp.theta = msg->data[7 * i + 2];
+    _obs_tmp.mea_cov = msg->data[7 * i + 4];
+    _obs_tmp.sigma_h = msg->data[7 * i + 6];
+    _obs_tmp.sigma_s = msg->data[7 * i + 7];
+    _obs_tmp.sigma_r = msg->data[7 * i + 8];
 
     _obs_kf[flag].param_list.push_back(_obs_tmp);
 

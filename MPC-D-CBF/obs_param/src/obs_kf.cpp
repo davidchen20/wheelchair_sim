@@ -24,6 +24,7 @@ struct Ellipse
   double sigma_h; //zbedit3
   double sigma_s; //zbedit3
   double sigma_r; //zbedit3
+  double orient_rad; //zbedit3
 };
 
 struct obs_param
@@ -34,9 +35,10 @@ struct obs_param
   // float b = 0.0; //original
   float theta = 0.0;
   float mea_cov;
-  float sigma_h = 0.0; //zbedit3
-  float sigma_s = 0.0; //zbedit3
-  float sigma_r = 0.0; //zbedit3
+  float sigma_h = 0.5; //zbedit3
+  float sigma_s = (2.0/3.0) * sigma_h; //zbedit3
+  float sigma_r = 0.5 * sigma_h; //zbedit3
+  float orient_rad = 0.0; //zbedit3
 };
 
 class obs_kf
@@ -62,11 +64,12 @@ public:
   obs_kf();
 } _obs_kf[obs_kf_buffer_size];
 
-obs_kf::obs_kf() : N(25)
+// obs_kf::obs_kf() : N(25) //original
+obs_kf::obs_kf() : N(35) //zbedit3
 {
   ka.m_StateSize = 9;
   // ka.m_MeaSize = 5; //original
-  ka.m_MeaSize = 6; //zbedit3
+  ka.m_MeaSize = 7; //zbedit3
   ka.m_USize = 9;
 
   T = 0.1;
@@ -89,7 +92,7 @@ obs_kf::obs_kf() : N(25)
   float R_cov = 0.0008;  //仿真 0.00005  实物  0.000003
 
   // R.resize(5, 5); //original
-  R.resize(6, 6); //zbedit3
+  R.resize(7, 7); //zbedit3
   R.setZero();
 
   //original:
@@ -105,11 +108,12 @@ obs_kf::obs_kf() : N(25)
   R(3, 3) = 0.0001 * R_cov; //sigma_s
   R(4, 4) = 0.0001 * R_cov; //sigma_r
   R(5, 5) = 0.00000001 * R_cov;
+  R(6, 6) = 0.00000001 * R_cov; //orient_rad
 
   A.resize(9, 9);
   A.setIdentity();
   // A(0, 5) = A(1, 6) = T; //original
-  A(0, 6) = A(1, 7) = T; //zbedit3
+  A(0, 7) = A(1, 8) = T; //zbedit3
 
   //     A<<1,0,0,0,0,T,0,0.5*T*T,0,
   //             0,1,0,0,0,0,T,0,0.5*T*T,
@@ -125,11 +129,11 @@ obs_kf::obs_kf() : N(25)
   B.setZero();
 
   // H.resize(5, 9); //original
-  H.resize(6, 9); //zbedit3
+  H.resize(7, 9); //zbedit3
   H.setIdentity();
 
   // z0.resize(5); //original
-  z0.resize(6); //zbedit3
+  z0.resize(7); //zbedit3
   z0.setZero();
 
   u_v.resize(9);
@@ -147,7 +151,7 @@ void obs_kf::obs_predict()
   if (num == 1)
   {
     // ka.m_x << param_list[0].x, param_list[0].y, param_list[0].a, param_list[0].b, param_list[0].theta, 0, 0, 0, 0; //original
-    ka.m_x << param_list[0].x, param_list[0].y, param_list[0].sigma_h, param_list[0].sigma_s, param_list[0].sigma_r, param_list[0].theta, 0, 0, 0; //zbedit3
+    ka.m_x << param_list[0].x, param_list[0].y, param_list[0].sigma_h, param_list[0].sigma_s, param_list[0].sigma_r, param_list[0].theta, param_list[0].orient_rad, 0, 0; //zbedit3
     ka.m_P = P0;
   }
   else
@@ -164,9 +168,9 @@ void obs_kf::obs_predict()
     ka.m_R(1, 1) = _k_cov * R(1, 1);
 
     // VectorXd z(5); //original
-    VectorXd z(6); //zbedit3
+    VectorXd z(7); //zbedit3
     // z << param_list.back().x, param_list.back().y, param_list.back().a, param_list.back().b, param_list.back().theta; //original
-    z << param_list.back().x, param_list.back().y, param_list.back().sigma_h, param_list.back().sigma_s, param_list.back().sigma_r, param_list.back().theta; //zbedit3
+    z << param_list.back().x, param_list.back().y, param_list.back().sigma_h, param_list.back().sigma_s, param_list.back().sigma_r, param_list.back().theta, param_list.back().orient_rad; //zbedit3
 
     ka.Predict_State();
     ka.Predict_Cov();
@@ -190,6 +194,7 @@ void obs_kf::obs_predict()
       float sigma_h_conf = 0.95 * sqrt(ka_tmp.m_P(2, 2)); //zbedit3
       float sigma_s_conf = 0.95 * sqrt(ka_tmp.m_P(3, 3)); //zbedit3
       float sigma_r_conf = 0.95 * sqrt(ka_tmp.m_P(4, 4)); //zbedit3
+      float orient_rad_conf = 0.95 * sqrt(ka_tmp.m_P(6, 6)); //zbedit3
       float pos_conf = max(x_conf, y_conf);
       // float ab_conf = max(a_conf, b_conf); //original
 
@@ -202,6 +207,7 @@ void obs_kf::obs_predict()
       pred.sigma_s = ka_tmp.m_x(3); //zbedit3
       pred.sigma_r = ka_tmp.m_x(4); //zbedit3
       pred.theta = ka.m_x(5); //zbedit3
+      pred.orient_rad = ka.m_x(6); //zbedit3
 
       pred_list.push_back(pred);
     }
@@ -230,16 +236,16 @@ void visEllipse(const vector<Ellipse>& obs_ellipses)
 
     mk.id = i;
 
-    mk.pose.orientation.x = 0.0;
-    mk.pose.orientation.y = 0.0;
-    mk.pose.orientation.z = sin(obs_ellipses[i].theta / 2);
-    mk.pose.orientation.w = cos(obs_ellipses[i].theta / 2);
-
-    mk.pose.position.x = obs_ellipses[i].cx;
-    mk.pose.position.y = obs_ellipses[i].cy;
-    mk.pose.position.z = -0.3;
-
     //original:
+    // mk.pose.orientation.x = 0.0;
+    // mk.pose.orientation.y = 0.0;
+    // mk.pose.orientation.z = sin(obs_ellipses[i].theta / 2);
+    // mk.pose.orientation.w = cos(obs_ellipses[i].theta / 2);
+
+    // mk.pose.position.x = obs_ellipses[i].cx;
+    // mk.pose.position.y = obs_ellipses[i].cy;
+    // mk.pose.position.z = -0.3;
+
     // mk.scale.x = 2 * obs_ellipses[i].semimajor;
     // mk.scale.y = 2 * obs_ellipses[i].semiminor;
     // mk.scale.z = 0.1;
@@ -250,7 +256,59 @@ void visEllipse(const vector<Ellipse>& obs_ellipses)
     // mk.scale.z = 1.0;
     mk.scale.x = 0.05;
 
+    //zbedit3: assign sigma value based on orientation:
+    //-----------------------------------------------------------------------------------
+    double vel_ang = fmod(obs_ellipses[i].orient_rad + 2 * M_PI,  2 * M_PI); //zbtask: Is it 30+sig_h?
+    double ray_ang = 0;
+    double delta_ang = M_PI / 30;
+    double cons = 0.354163;
+
+    while (ray_ang <= 2 * M_PI){
+      int flag = int(ray_ang / (M_PI / 2));
+
+      double prev_variance;
+      double next_variance;
+
+      if (flag == 0){
+          prev_variance = obs_ellipses[i].sigma_h;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+      else if( flag == 1){
+          prev_variance = obs_ellipses[i].sigma_r;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+      else if( flag == 2){
+          prev_variance = obs_ellipses[i].sigma_r;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+      else{
+          prev_variance = obs_ellipses[i].sigma_h;
+          next_variance = obs_ellipses[i].sigma_s;
+      }
+
+      double dist = sqrt(cons / ((cos(ray_ang) *cos(ray_ang) / (2 * prev_variance)) + (sin(ray_ang) *sin(ray_ang) / (2 * next_variance))));
+
+      double total_angle = ray_ang + vel_ang;
+
+      double x_offset = dist * sin(total_angle);
+      double y_offset = dist * cos(total_angle);
+
+      geometry_msgs::Point edge_point;
+      geometry_msgs::Point edge_point_temp;
+
+      edge_point.x = obs_ellipses[i].cx + x_offset; //zborig
+      edge_point.y = obs_ellipses[i].cy + y_offset; //zborig
+      edge_point.z = 0;
+      // std::cout<<"ZBCHECK_obskf: "<<"edge_point.x, edge_point.y: "<<edge_point.x<<", "<<edge_point.y<<std::endl;
+
+      mk.points.push_back(edge_point);
+
+      ray_ang += delta_ang;
+    }
+    //-----------------------------------------------------------------------------------
+
     ellipse_vis.markers.push_back(mk);
+    mk.points.clear(); //zbedit3
   }
 
   _obs_vis_pub.publish(ellipse_vis);
@@ -274,6 +332,7 @@ void curve_fitting(obs_kf& obs, std_msgs::Float32MultiArray& obs_pub, vector<Ell
     ellipse.sigma_s = obs.pred_list[i].sigma_s; //zbedit3
     ellipse.sigma_r = obs.pred_list[i].sigma_r; //zbedit3
     ellipse.theta = obs.pred_list[i].theta;
+    ellipse.orient_rad = obs.pred_list[i].orient_rad; //zbedit3
     ellipses_array.push_back(ellipse);
 
     obs_pub.data.push_back(obs.pred_list[i].x);
@@ -284,38 +343,45 @@ void curve_fitting(obs_kf& obs, std_msgs::Float32MultiArray& obs_pub, vector<Ell
     obs_pub.data.push_back(obs.pred_list[i].sigma_s); //zbedit3
     obs_pub.data.push_back(obs.pred_list[i].sigma_r); //zbedit3
     obs_pub.data.push_back(obs.pred_list[i].theta);
+    obs_pub.data.push_back(obs.pred_list[i].orient_rad); //zbedit3
   }
 }
 
 void obscb(const std_msgs::Float32MultiArray::ConstPtr& msg)
 {
+  // std::cout<<"ZBCHECK1_msgsize "<<msg->data.size()<<endl;
   ROS_INFO("[node] receive the obs track");
   if (msg->data.empty())
     return;
 
-  int num = msg->data.size() / 7;
+  // int num = msg->data.size() / 7; //original
+  int num = msg->data.size() / 10; //zbedit3
 
   std_msgs::Float32MultiArray obs_pub;
   vector<Ellipse> ellipses_array;
   for (int i = 0; i < num; i++)
   {
-    int flag = msg->data[7 * i + 5];
+    // int flag = msg->data[7 * i + 5]; //original
+    int flag = msg->data[10 * i + 3]; //zbedit3
 
     obs_param _obs_tmp;
-    _obs_tmp.x = msg->data[7 * i];
-    _obs_tmp.y = msg->data[7 * i + 1];
-
+    
     //original:
+    // _obs_tmp.x = msg->data[7 * i];
+    // _obs_tmp.y = msg->data[7 * i + 1];
     // _obs_tmp.a = msg->data[7 * i + 2];
     // _obs_tmp.b = msg->data[7 * i + 3];
     // _obs_tmp.theta = msg->data[7 * i + 4];
     // _obs_tmp.mea_cov = msg->data[7 * i + 6];
     //zbedit3:
-    _obs_tmp.theta = msg->data[7 * i + 2];
-    _obs_tmp.mea_cov = msg->data[7 * i + 4];
-    _obs_tmp.sigma_h = msg->data[7 * i + 6];
-    _obs_tmp.sigma_s = msg->data[7 * i + 7];
-    _obs_tmp.sigma_r = msg->data[7 * i + 8];
+    _obs_tmp.x = msg->data[10 * i];
+    _obs_tmp.y = msg->data[10 * i + 1];
+    _obs_tmp.theta = msg->data[10 * i + 2];
+    _obs_tmp.mea_cov = msg->data[10 * i + 4];
+    _obs_tmp.sigma_h = msg->data[10 * i + 6];
+    _obs_tmp.sigma_s = msg->data[10 * i + 7];
+    _obs_tmp.sigma_r = msg->data[10 * i + 8];
+    _obs_tmp.orient_rad = msg->data[10 * i + 9];
 
     _obs_kf[flag].param_list.push_back(_obs_tmp);
 

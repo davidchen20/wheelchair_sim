@@ -56,8 +56,10 @@ void rvo_stateCallback(const gazebo_msgs::WorldState::ConstPtr &sub_msg)
         double cons = 0.354163;
 
         double front_coeff = 1.0;
-        double side_coeff = 0.4; // 2/3
-        double rear_coeff = 0.25; // 0.5
+        // double side_coeff = 0.4; // 2/3
+        // double rear_coeff = 0.25; // 0.5
+        double side_coeff = 0.66; // 2/3 //zbedit3
+        double rear_coeff = 0.5; // 0.5 //zbedit3
         double safety_dist = 0.5;
         double velocity_x = agent_velocity.linear.x;
         double velocity_y = agent_velocity.linear.y;
@@ -105,7 +107,7 @@ void rvo_stateCallback(const gazebo_msgs::WorldState::ConstPtr &sub_msg)
             edge_point.x = agent_pose.position.x + x_offset;
             edge_point.y = agent_pose.position.y + y_offset;
             edge_point.z = 0;
-            // std::cout<<"ZBCHECK_dsp: "<<"edge_point.x, edge_point.y: "<<edge_point.x<<", "<<edge_point.y<<std::endl;
+            // std::cout<<"ZBCHECK_dss: "<<"edge_point.x, edge_point.y: "<<edge_point.x<<", "<<edge_point.y<<std::endl;
             
             mk.points.push_back(edge_point);
 

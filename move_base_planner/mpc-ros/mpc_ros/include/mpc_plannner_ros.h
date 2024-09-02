@@ -152,6 +152,7 @@ namespace mpc_ros{
             ros::Subscriber _sub_amcl; 
             ros::Subscriber _sub_init;
             ros::Publisher _pub_odompath, _pub_mpctraj, _pub_customtraj, _pub_combtraj;
+            ros::Publisher _pub_odom_vel;
             tf2_ros::Buffer *tf_;  ///
             
             nav_msgs::Odometry _odom;

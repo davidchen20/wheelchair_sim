@@ -71,7 +71,7 @@ namespace mpc_ros{
         _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("mpc_trajectory", 1);// MPC trajectory output
         _pub_odompath  = _nh.advertise<nav_msgs::Path>("mpc_reference", 1); // reference path for MPC ///mpc_reference 
         _pub_customtraj = _nh.advertise<nav_msgs::Path>("custom_traj", 1); // user input reference
-        
+        _pub_odom_vel = _nh.advertise<geometry_msgs::PoseStamped>("odom_vel", 10); 
 
         //Init variables
         _throttle = 0.0; 
@@ -324,6 +324,7 @@ namespace mpc_ros{
 
         geometry_msgs::PoseStamped robot_vel;
         odom_helper_.getRobotVel(robot_vel);
+        _pub_odom_vel.publish(robot_vel);
 
         //compute what trajectory to drive along
         geometry_msgs::PoseStamped drive_cmds;

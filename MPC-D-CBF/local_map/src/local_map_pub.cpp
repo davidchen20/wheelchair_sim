@@ -316,6 +316,7 @@ int main(int argc, char **argv)
       {
         gradient_map(obs.x, obs.y) = -0.3;
         clustered_obs[obs.obsID - 1].emplace_back(obs.x, obs.y);
+        // std::cout<<"ZBCheck: obs.x, obs.y: "<< obs.x << ", " << obs.y<<std::endl;
       }
     }    
 
@@ -323,25 +324,25 @@ int main(int argc, char **argv)
     vector<Ellipse> ellipses_array = get_ellipse_array(clustered_obs, map_);
     KM.tracking(ellipses_array);
     ab_variance_calculation(ellipses_array); //original
-    std::cout<<"ZBCheck2"<<std::endl;
+    // std::cout<<"ZBCheck2"<<std::endl;
     asym_guass_calculation(ellipses_array, ellipses_array_prev); //zbedit3
-    std::cout<<"ZBCheck3"<<std::endl;
+    // std::cout<<"ZBCheck3"<<std::endl;
     //zbcheck: 
-    for (const auto &ell: ellipses_array){
-      std::cout<<"-----------------------------"<<std::endl;
-      std::cout<<"cx: "<<ell.cx<<std::endl;        
-      std::cout<<"cy: "<<ell.cy<<std::endl; 
-      std::cout<<"theta: "<<ell.theta<<std::endl; 
-      std::cout<<"velocity: "<<ell.velocity<<std::endl; 
-      std::cout<<"sigma_h: "<<ell.sigma_h<<std::endl; 
-      std::cout<<"sigma_s: "<<ell.sigma_s<<std::endl; 
-      std::cout<<"sigma_r: "<<ell.sigma_r<<std::endl; 
-      std::cout<<"orient_rad: "<<ell.orient_rad<<std::endl; 
-      std::cout<<"time_stamp: "<<ell.time_stamp<<std::endl; 
-      std::cout<<"label: "<<ell.label<<std::endl;
-      std::cout<<"variance: "<<ell.variance<<std::endl;
-    }
-    std::cout<<std::endl<<std::endl;
+    // for (const auto &ell: ellipses_array){
+    //   std::cout<<"-----------------------------"<<std::endl;
+    //   std::cout<<"cx: "<<ell.cx<<std::endl;        
+    //   std::cout<<"cy: "<<ell.cy<<std::endl; 
+    //   std::cout<<"theta: "<<ell.theta<<std::endl; 
+    //   std::cout<<"velocity: "<<ell.velocity<<std::endl; 
+    //   std::cout<<"sigma_h: "<<ell.sigma_h<<std::endl; 
+    //   std::cout<<"sigma_s: "<<ell.sigma_s<<std::endl; 
+    //   std::cout<<"sigma_r: "<<ell.sigma_r<<std::endl; 
+    //   std::cout<<"orient_rad: "<<ell.orient_rad<<std::endl; 
+    //   std::cout<<"time_stamp: "<<ell.time_stamp<<std::endl; 
+    //   std::cout<<"label: "<<ell.label<<std::endl;
+    //   std::cout<<"variance: "<<ell.variance<<std::endl;
+    // }
+    // std::cout<<std::endl<<std::endl;
 
     // publish
     std_msgs::Float32MultiArray for_obs_track;
@@ -356,11 +357,12 @@ int main(int argc, char **argv)
       // for_obs_track.data.push_back(ellipse.semiminor); //original (important)
       for_obs_track.data.push_back(ellipse.theta);
       for_obs_track.data.push_back(ellipse.label);
-      // for_obs_track.data.push_back(ellipse.variance); //original
+      for_obs_track.data.push_back(ellipse.variance); //original
       for_obs_track.data.push_back(ellipse.velocity); //zbedit3
       for_obs_track.data.push_back(ellipse.sigma_h); //zbedit3
       for_obs_track.data.push_back(ellipse.sigma_s); //zbedit3
       for_obs_track.data.push_back(ellipse.sigma_r); //zbedit3
+      for_obs_track.data.push_back(ellipse.orient_rad); //zbedit3
     }
     for_obs_track_pub.publish(for_obs_track);
 
@@ -368,7 +370,8 @@ int main(int argc, char **argv)
     sensor_msgs::PointCloud2 local_velodyne_msg;
     pcl::toROSMsg(velodyne_cloud_global, local_velodyne_msg);
     local_velodyne_msg.header.stamp = ros::Time::now();
-    local_velodyne_msg.header.frame_id = "map";
+    local_velodyne_msg.header.frame_id = "map"; //original
+    // local_velodyne_msg.header.frame_id = "base_link"; //zbedit3
     local_pcd_pub.publish(local_velodyne_msg);
 
     grid_map_msgs::GridMap gridMapMessage;
@@ -376,9 +379,9 @@ int main(int argc, char **argv)
     gridmap_pub.publish(gridMapMessage);
     // publish ellipse data
     visEllipse(ellipses_array, ellipse_vis_pub);
-    std::cout<<"ZBCheck1"<<std::endl;
+    // std::cout<<"ZBCheck1"<<std::endl;
     ellipses_array_prev = ellipses_array; //zbedit3
-    std::cout<<"ZBCheck6"<<std::endl;
+    // std::cout<<"ZBCheck6"<<std::endl;
 
     ros::spinOnce();
     rate.sleep();

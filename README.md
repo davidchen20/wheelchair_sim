@@ -18,12 +18,10 @@ ROS Noetic
 
 ## Usage
 
-Open the wheelchair sim and rvo for pedestrain simulation.
+Open the wheelchair sim and launch the gazebo simulation environment
 
-`roslaunch wheelchair_gazebo wheelchair_dynamic.launch `
+`roslaunch wheelchair_gazebo wheelchair_lab.launch `
 
-Dynamic crossing test.
+Open wheelchair navigation
 
-`roscd wheelchair_gazebo/`
-
-`bash dynamic_test_crossing.sh`
+`roslaunch wheelchair_navigation wheelchair_navigation.launch`

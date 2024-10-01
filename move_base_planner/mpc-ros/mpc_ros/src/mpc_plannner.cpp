@@ -125,18 +125,44 @@ class FG_eval
               fg[0] += _w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2); // heading error
               fg[0] += _w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2); // speed error
 
+              double _w_throttle_penalty = 0; // Adjust this value as needed
+              
+              if (i == 0){
+                fg[0] += _w_throttle_penalty * (1 / (CppAD::abs(vars[_v_start + i]) + 0.001));
+              }
+              cout << "cost of velocity penalty: "<<_w_throttle_penalty * (1 / (CppAD::abs(vars[_v_start + i]) + 0.001)) <<endl;
+
               cost_cte +=  _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2);
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
               cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
+
+
             }
             // cout << "-----------------------------------------------" <<endl;
-            // cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
+            // fg[0] += _w_vel * CppAD::pow(vars[_v_start] - _ref_vel, 2); // speed error
+            // cost_vel =  (_w_vel * CppAD::pow(vars[_v_start] - _ref_vel, 2)); 
+            cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
             
 
             // Minimize the use of actuators.
             for (int i = 0; i < _mpc_steps - 1; i++) {
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
+                  // Add penalty for throttle values between -_min_throttle and _min_throttle
+                // double _w_throttle_penalty = 5000; // Adjust this value as needed
+                // double _min_throttle = 0.4;
+               // Compute the throttle gap
+                // AD<double> throttle_gap = _min_throttle - CppAD::abs(vars[_a_start + i]);
+                // // Apply penalty if throttle_gap > 0
+                // AD<double> throttle_penalty = CppAD::CondExpGt(throttle_gap, AD<double>(0.0), throttle_gap, AD<double>(0.0));
+                // cout << "Cost: "<< vars[_a_start + i] <<endl;
+                // if(CppAD::abs(vars[_a_start + i]) < 0.01){
+                //     fg[0] += 10000;
+                // }
+                // else{
+                //     fg[0] += _w_throttle_penalty * (1 / CppAD::abs(vars[_a_start + i]));
+                //     cout << "cost of velocity penalty: "<<CppAD::Value(CppAD::abs(vars[_a_start + i])) <<endl;
+                // }
             }
             // cout << "cost of actuators: " << fg[0] << endl; 
 

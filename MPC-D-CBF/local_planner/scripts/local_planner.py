@@ -20,8 +20,8 @@ class Local_Planner():
         self.replan_period = rospy.get_param('/local_planner/replan_period', 0.05)
 
         self.z = 0
-        # self.N = 25
-        self.N = 35 #zbedit3
+        self.N = 25 #original
+        # self.N = 49 #zbedit4
         self.goal_state = np.zeros([self.N, 3])
         self.user_input = Twist()
         self.current_vel_time = 0
@@ -51,13 +51,13 @@ class Local_Planner():
 
         self.__sub_obs = rospy.Subscriber('/obs_predict_pub', Float32MultiArray, self.__obs_cb, queue_size=10)
 
-        # self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=25) #original
+        self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=25) #original
 
-        # self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=25) #original
+        self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=25) #original
 
-        self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=35) #zbedit3
+        # self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=49) #zbedit4
 
-        self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=35) #zbedit3
+        # self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=49) #zbedit4
 
         self.__pub_local_path_vis = rospy.Publisher('/pub_path_vis', Marker, queue_size=10)
 
@@ -103,11 +103,11 @@ class Local_Planner():
     def __obs_cb(self, data):
         self.obstacle_lock.acquire()
         self.ob = []
-        # size = int(len(data.data) / 5) #original
-        size = int(len(data.data) / 7) #zbedit3
+        # size = int(len(data.data) / 5) //original
+        size = int(len(data.data) / 7) #zbedit4
         for i in range(size):
-            # self.ob.append(np.array(data.data[5*i:5*i+5])) #original
-            self.ob.append(np.array(data.data[7*i:7*i+7])) #zbedit3
+            # self.ob.append(np.array(data.data[5*i:5*i+5])) //original
+            self.ob.append(np.array(data.data[7*i:7*i+7])) #zbedit4
         self.obstacle_lock.release()
 
     def __global_path_cb(self, path):
@@ -307,13 +307,15 @@ class Local_Planner():
         def f(x_, u_): return ca.vertcat(*[u_[0] * ca.cos(x_[2]), u_[0] * ca.sin(x_[2]), u_[1]])
 
         def exceed_ob(ob_):
-            # l_long_axis = ob_[2] #original
-            l_long_axis = ob_[6] + ob_[8] #zbedit3: should represent sigma_h+sigma_r
-            # l_short_axis = ob_[3] #original
-            l_short_axis = 2*ob_[7] #zbedit3: should represent 2*sigma_s
-            # long_axis = np.array([np.cos(ob_[4]) * l_long_axis, np.sin(ob_[4]) * l_long_axis]) #original
-            # long_axis = np.array([np.cos(ob_[2]) * l_long_axis, np.sin(ob_[2]) * l_long_axis]) #zbedit3
-            long_axis = np.array([np.cos(ob_[9]) * l_long_axis, np.sin(ob_[9]) * l_long_axis]) #zbedit3 test
+            #original:
+            # l_long_axis = ob_[2]
+            # l_short_axis = ob_[3]
+            # long_axis = np.array([np.cos(ob_[4]) * l_long_axis, np.sin(ob_[4]) * l_long_axis])
+
+            #zbedit4:
+            l_long_axis = ob_[6] + ob_[8] #should represent sigma_h+sigma_r
+            l_short_axis = 2*ob_[7] #should represent 2*sigma_s
+            long_axis = np.array([np.cos(ob_[9]) * l_long_axis, np.sin(ob_[9]) * l_long_axis])
 
             ob_vec = np.array([ob_[0], ob_[1]])
             center_vec = self.goal_state[self.N-1, :2] - ob_vec
@@ -339,16 +341,17 @@ class Local_Planner():
             #safe_dist = 1.3 # for scout
             safe_dist = 0.7 # for jackal
 
-            # c = ca.cos(ob_[4]) #original
-            # s = ca.sin(ob_[4]) #original
-            # a = ca.MX([ob_[2]]) #original
-            # b = ca.MX([ob_[3]]) #original
-            # c = ca.cos(ob_[2]) #zbedit3
-            # s = ca.sin(ob_[2]) #zbedit3
-            c = ca.cos(ob_[9]) #zbedit3 test
-            s = ca.sin(ob_[9]) #zbedit3 test
-            a = ca.MX([ob_[6] + ob_[8]]) #zbedit3
-            b = ca.MX([2*ob_[7]]) #zbedit3
+            #original:
+            # c = ca.cos(ob_[4])
+            # s = ca.sin(ob_[4])
+            # a = ca.MX([ob_[2]])
+            # b = ca.MX([ob_[3]])
+
+            #zbedit4:
+            c = ca.cos(ob_[9])
+            s = ca.sin(ob_[9])
+            a = ca.MX([ob_[6] + ob_[8]])
+            b = ca.MX([2*ob_[7]])
 
             ob_vec = ca.MX([ob_[0], ob_[1]])
             center_vec = curpos_[:2] - ob_vec.T
@@ -379,17 +382,19 @@ class Local_Planner():
 
         num_obs = int(len(self.ob)/self.N)
 
+        #original:
         for j in range(num_obs):
-            #original:
-            # if not exceed_ob(self.ob[25*j]):
-            #     for i in range(self.N-1):
-            #         opti.subject_to(h(opt_states[i + 1, :], self.ob[j * 25 + i + 1]) >=
-            #                         (1 - gamma_k) * h(opt_states[i, :], self.ob[j * 25 + i]))
-            #zbedit3:
-            if not exceed_ob(self.ob[35*j]):
+            if not exceed_ob(self.ob[25*j]):
                 for i in range(self.N-1):
-                    opti.subject_to(h(opt_states[i + 1, :], self.ob[j * 35 + i + 1]) >=
-                                    (1 - gamma_k) * h(opt_states[i, :], self.ob[j * 35 + i]))
+                    opti.subject_to(h(opt_states[i + 1, :], self.ob[j * 25 + i + 1]) >=
+                                    (1 - gamma_k) * h(opt_states[i, :], self.ob[j * 25 + i]))
+                    
+        #zbedit4:
+        # for j in range(num_obs):
+        #     if not exceed_ob(self.ob[49*j]):
+        #         for i in range(self.N-1):
+        #             opti.subject_to(h(opt_states[i + 1, :], self.ob[j * 49 + i + 1]) >=
+        #                             (1 - gamma_k) * h(opt_states[i, :], self.ob[j * 49 + i]))
 
         obj = 0
         R = np.diag([0.1, 0.02])

@@ -139,6 +139,22 @@ class FG_eval
             for (int i = 0; i < _mpc_steps - 1; i++) {
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
+
+            //     // Add penalty for throttle values between -_min_throttle and _min_throttle
+            //     double _w_throttle_penalty = 1000; // Adjust this value as needed
+            //     double _min_throttle = 0.1;
+            //    // Compute the throttle gap
+            //     AD<double> throttle_gap = _min_throttle - CppAD::abs(vars[_a_start + i]);
+            //     // // Apply penalty if throttle_gap > 0
+            //     AD<double> throttle_penalty = CppAD::CondExpGt(throttle_gap, AD<double>(0.0), throttle_gap, AD<double>(0.0));
+            //     fg[0] += _w_throttle_penalty * CppAD::pow(throttle_penalty, 2);
+
+                double  _w_angvel_penalty = 1000000;
+                double _min_angvel = 0.5;
+                // **Add penalty for angular velocity within [-_min_angvel, _min_angvel]**
+                AD<double> angvel_gap =_min_angvel - CppAD::abs(vars[_angvel_start + i]);
+                AD<double> angvel_penalty = CppAD::CondExpGt(angvel_gap,AD<double>(0.0), angvel_gap,AD<double>(0.0));
+                fg[0] += _w_angvel_penalty * CppAD::pow(angvel_penalty, 2);
             }
             cout << "cost of actuators: " << fg[0] << endl; 
 
@@ -248,6 +264,9 @@ void MPC::LoadParams(const std::map<string, double> &params)
     _max_angvel = _params.find("ANGVEL") != _params.end() ? _params.at("ANGVEL") : _max_angvel;
     _max_throttle = _params.find("MAXTHR") != _params.end() ? _params.at("MAXTHR") : _max_throttle;
     _bound_value  = _params.find("BOUND") != _params.end()  ? _params.at("BOUND") : _bound_value;
+
+    _min_throttle = params.find("MINTHR") != params.end() ? params.at("MINTHR") : _min_throttle;
+    _w_throttle_penalty = params.find("W_THROTTLE_PENALTY") != params.end() ? params.at("W_THROTTLE_PENALTY") : _w_throttle_penalty;
     
     _x_start     = 0;
     _y_start     = _x_start + _mpc_steps;

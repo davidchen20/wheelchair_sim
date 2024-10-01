@@ -6,9 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /GridMap1
-        - /Predict_Ellipse1
         - /Axes1
-        - /MarkerArray1
       Splitter Ratio: 0.40095847845077515
     Tree Height: 725
   - Class: rviz/Selection
@@ -142,8 +140,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 0.7588485479354858
-        Min Value: -0.006417304277420044
+        Max Value: 0.39970019459724426
+        Min Value: -0.006187260150909424
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -225,13 +223,13 @@ Visualization Manager:
       Queue Size: 100
       Value: false
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /obs_predict_vis_pub
       Name: Predict_Ellipse
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/Marker
       Enabled: false
       Marker Topic: /pub_path_vis
@@ -298,14 +296,13 @@ Visualization Manager:
       Show Trail: false
       Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /local_map_pub/ellipse_vis
+      Enabled: false
+      Marker Topic: /social_area
       Name: MarkerArray
       Namespaces:
-        ellipse: true
-        text: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255

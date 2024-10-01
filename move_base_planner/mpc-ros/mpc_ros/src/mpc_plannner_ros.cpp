@@ -341,13 +341,15 @@ namespace mpc_ros{
         cmd_vel.linear.y = drive_cmds.pose.position.y;
         cmd_vel.angular.z = tf2::getYaw(drive_cmds.pose.orientation);
 
-        // if(cmd_vel.linear.x != 0){
-        //     cmd_vel.linear.x -= 0.1;
-        // }
 
-        // if(cmd_vel.angular.z != 0){
-        //     cmd_vel.angular.z -= 0.1;
-        // }
+
+        if(std::abs(cmd_vel.linear.x) < 0.1){
+            cmd_vel.linear.x = 0;
+        }
+
+        if(std::abs(cmd_vel.angular.z) < 0.2){
+            cmd_vel.angular.z = 0;
+        }
 
         // cmd_vel.linear.x = 0;
         // cmd_vel.linear.y = 0;
@@ -435,7 +437,7 @@ namespace mpc_ros{
         last_rob_pose[0] = current_rob_pose[0];
         last_rob_pose[1] = current_rob_pose[1];
 
-        cout<<"Total path length is "<<_total_path_length<<"m"<<endl;
+        // cout<<"Total path length is "<<_total_path_length<<"m"<<endl;
 
         try
         {

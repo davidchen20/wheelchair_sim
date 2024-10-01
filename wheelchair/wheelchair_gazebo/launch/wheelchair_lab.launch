@@ -14,7 +14,7 @@
   <arg name="z_pos" default="0"/>
   <arg name="yaw" default="-1.6104512"/>  -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find wheelchair_gazebo)/worlds/GGB_world_empty.world"/>
+    <arg name="world_name" value="$(find wheelchair_gazebo)/worlds/GGB_3obs.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>

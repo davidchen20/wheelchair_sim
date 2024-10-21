@@ -335,14 +335,14 @@ int main(int argc, char **argv)
       for_obs_track.data.push_back(ellipse.cy);
       // for_obs_track.data.push_back(ellipse.semimajor); //original
       // for_obs_track.data.push_back(ellipse.semiminor); //original
-      for_obs_track.data.push_back(ellipse.theta);
-      for_obs_track.data.push_back(ellipse.label);
-      for_obs_track.data.push_back(ellipse.variance);
       // for_obs_track.data.push_back(ellipse.velocity); //zbedit4+remove
       for_obs_track.data.push_back(ellipse.sigma_h); //zbedit4
       for_obs_track.data.push_back(ellipse.sigma_s); //zbedit4
       for_obs_track.data.push_back(ellipse.sigma_r); //zbedit4
       for_obs_track.data.push_back(ellipse.orient_rad); //zbedit4
+      for_obs_track.data.push_back(ellipse.theta);
+      for_obs_track.data.push_back(ellipse.label);
+      for_obs_track.data.push_back(ellipse.variance);
     }
     for_obs_track_pub.publish(for_obs_track);
 
@@ -358,25 +358,31 @@ int main(int argc, char **argv)
     gridmap_pub.publish(gridMapMessage);
     // publish ellipse data
     visEllipse(ellipses_array, ellipse_vis_pub);
-    vector<Ellipse> ellipses_array_prev = ellipses_array; //zbedit4
+    // vector<Ellipse> ellipses_array_prev = ellipses_array; //zbedit4
+    //zbedit4try:
+    ellipses_array_prev = vector<Ellipse>(ellipses_array.size()); 
+    for (size_t i = 0; i < ellipses_array.size(); ++i) {
+        ellipses_array_prev[i] = ellipses_array[i];
+    }
 
-    // std::cout<<std::endl<<std::endl;
-    // std::cout<<"ZBCHECK0_prev: "<<std::endl;
-    // for (const auto &ell: ellipses_array_prev){
-    //   std::cout<<"-----------------------------"<<std::endl;
-    //   std::cout<<"cx: "<<ell.cx<<std::endl;        
-    //   std::cout<<"cy: "<<ell.cy<<std::endl; 
-    //   std::cout<<"theta: "<<ell.theta<<std::endl; 
-    //   std::cout<<"velocity: "<<ell.velocity<<std::endl; 
-    //   std::cout<<"sigma_h: "<<ell.sigma_h<<std::endl; 
-    //   std::cout<<"sigma_s: "<<ell.sigma_s<<std::endl; 
-    //   std::cout<<"sigma_r: "<<ell.sigma_r<<std::endl; 
-    //   std::cout<<"orient_rad: "<<ell.orient_rad<<std::endl; 
-    //   std::cout<<"time_stamp: "<<ell.time_stamp<<std::endl; 
-    //   std::cout<<"label: "<<ell.label<<std::endl;
-    //   std::cout<<"variance: "<<ell.variance<<std::endl;
-    // }
-    // std::cout<<std::endl<<std::endl;
+    std::cout<<std::endl<<std::endl;
+    std::cout<<"ZBCHECK0_prev: "<<std::endl;
+    for (const auto &ell: ellipses_array_prev){
+      std::cout<<"-----------------------------"<<std::endl;
+      std::cout<<"cx: "<<ell.cx<<std::endl;        
+      std::cout<<"cy: "<<ell.cy<<std::endl; 
+      std::cout<<"velocity: "<<ell.velocity<<std::endl; 
+      std::cout<<"sigma_h: "<<ell.sigma_h<<std::endl; 
+      std::cout<<"sigma_s: "<<ell.sigma_s<<std::endl; 
+      std::cout<<"sigma_r: "<<ell.sigma_r<<std::endl; 
+      std::cout<<"orient_rad: "<<ell.orient_rad<<std::endl; 
+      std::cout<<"time_stamp: "<<ell.time_stamp<<std::endl; 
+      std::cout<<"theta: "<<ell.theta<<std::endl; 
+      std::cout<<"label: "<<ell.label<<std::endl;
+      std::cout<<"variance: "<<ell.variance<<std::endl;
+      std::cout<<"-----------------------------"<<std::endl;
+    }
+    std::cout<<std::endl<<std::endl;
 
     ros::spinOnce();
     rate.sleep();

@@ -40,7 +40,7 @@
 
     <!-- <include file="$(find rvo_ros)/simulation/rvo_gazebo_agent.launch"/> -->
 
-    <node pkg="obs_param" type="obs_kf" name="obs_kf" />
+    <node pkg="obs_param" type="obs_kf" output="screen" name="obs_kf" /> <!-- zbedit4 to add print -->
 
     <!-- <include file="$(find global_path_publisher)/launch/pub_global_path.launch" /> -->
     <node pkg="global_path_publisher" type="global_path_pub" output="screen" name="global_path_pub">  

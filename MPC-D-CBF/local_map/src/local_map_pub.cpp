@@ -365,24 +365,24 @@ int main(int argc, char **argv)
         ellipses_array_prev[i] = ellipses_array[i];
     }
 
-    std::cout<<std::endl<<std::endl;
-    std::cout<<"ZBCHECK0_prev: "<<std::endl;
-    for (const auto &ell: ellipses_array_prev){
-      std::cout<<"-----------------------------"<<std::endl;
-      std::cout<<"cx: "<<ell.cx<<std::endl;        
-      std::cout<<"cy: "<<ell.cy<<std::endl; 
-      std::cout<<"velocity: "<<ell.velocity<<std::endl; 
-      std::cout<<"sigma_h: "<<ell.sigma_h<<std::endl; 
-      std::cout<<"sigma_s: "<<ell.sigma_s<<std::endl; 
-      std::cout<<"sigma_r: "<<ell.sigma_r<<std::endl; 
-      std::cout<<"orient_rad: "<<ell.orient_rad<<std::endl; 
-      std::cout<<"time_stamp: "<<ell.time_stamp<<std::endl; 
-      std::cout<<"theta: "<<ell.theta<<std::endl; 
-      std::cout<<"label: "<<ell.label<<std::endl;
-      std::cout<<"variance: "<<ell.variance<<std::endl;
-      std::cout<<"-----------------------------"<<std::endl;
-    }
-    std::cout<<std::endl<<std::endl;
+    // std::cout<<std::endl<<std::endl;
+    // std::cout<<"ZBCHECK0_prev: "<<std::endl;
+    // for (const auto &ell: ellipses_array_prev){
+    //   std::cout<<"-----------------------------"<<std::endl;
+    //   std::cout<<"cx: "<<ell.cx<<std::endl;        
+    //   std::cout<<"cy: "<<ell.cy<<std::endl; 
+    //   std::cout<<"velocity: "<<ell.velocity<<std::endl; 
+    //   std::cout<<"sigma_h: "<<ell.sigma_h<<std::endl; 
+    //   std::cout<<"sigma_s: "<<ell.sigma_s<<std::endl; 
+    //   std::cout<<"sigma_r: "<<ell.sigma_r<<std::endl; 
+    //   std::cout<<"orient_rad: "<<ell.orient_rad<<std::endl; 
+    //   std::cout<<"time_stamp: "<<ell.time_stamp<<std::endl; 
+    //   std::cout<<"theta: "<<ell.theta<<std::endl; 
+    //   std::cout<<"label: "<<ell.label<<std::endl;
+    //   std::cout<<"variance: "<<ell.variance<<std::endl;
+    //   std::cout<<"-----------------------------"<<std::endl;
+    // }
+    // std::cout<<std::endl<<std::endl;
 
     ros::spinOnce();
     rate.sleep();

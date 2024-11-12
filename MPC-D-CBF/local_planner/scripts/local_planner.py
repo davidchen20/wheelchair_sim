@@ -47,27 +47,43 @@ class Local_Planner():
 
         self.__timer_replan = rospy.Timer(rospy.Duration(self.replan_period), self.__replan_cb)
 
-        self.__sub_curr_state = rospy.Subscriber('/curr_state', Float32MultiArray, self.__curr_pose_cb, queue_size=10)
+        self.__sub_curr_state = rospy.Subscriber('/curr_state', Float32MultiArray, self.__curr_pose_cb, queue_size=10) #original
 
-        self.__sub_obs = rospy.Subscriber('/obs_predict_pub', Float32MultiArray, self.__obs_cb, queue_size=10)
+        self.__sub_obs = rospy.Subscriber('/obs_predict_pub', Float32MultiArray, self.__obs_cb, queue_size=10) #original
 
-        # self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=25) #original
+        # self.__sub_curr_state = rospy.Subscriber('/curr_state', Float32MultiArray, self.__curr_pose_cb, queue_size=14) #zbedit4
 
-        # self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=25) #original
+        # self.__sub_obs = rospy.Subscriber('/obs_predict_pub', Float32MultiArray, self.__obs_cb, queue_size=14) #zbedit4
 
-        self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=35) #zbedit4
+        self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=25) #original
 
-        self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=35) #zbedit4
+        self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=25) #original
 
-        self.__pub_local_path_vis = rospy.Publisher('/pub_path_vis', Marker, queue_size=10)
+        # self.__sub_goal = rospy.Subscriber(path_topic, Path, self.__global_path_cb, queue_size=35) #zbedit4
 
-        self.__pub_local_path = rospy.Publisher('/local_path', Path, queue_size=10)
+        # self.__sub_user = rospy.Subscriber('user_cmd', Twist, self.__user_cmd_cb, queue_size=35) #zbedit4
 
-        self.__pub_user_path = rospy.Publisher('/user_path', Path, queue_size=10)
+        self.__pub_local_path_vis = rospy.Publisher('/pub_path_vis', Marker, queue_size=10) #original
 
-        self.__pub_local_plan = rospy.Publisher('/local_plan', Float32MultiArray, queue_size=10)
+        self.__pub_local_path = rospy.Publisher('/local_path', Path, queue_size=10) #original
 
-        self.__pub_start = rospy.Publisher('/cmd_move', Bool, queue_size=10)
+        self.__pub_user_path = rospy.Publisher('/user_path', Path, queue_size=10) #original
+
+        self.__pub_local_plan = rospy.Publisher('/local_plan', Float32MultiArray, queue_size=10) #original
+
+        self.__pub_start = rospy.Publisher('/cmd_move', Bool, queue_size=10) #original
+
+        # self.__pub_local_path_vis = rospy.Publisher('/pub_path_vis', Marker, queue_size=14) #zbedit4
+
+        # self.__pub_local_path = rospy.Publisher('/local_path', Path, queue_size=14) #zbedit4
+
+        # self.__pub_user_path = rospy.Publisher('/user_path', Path, queue_size=14) #zbedit4
+
+        # self.__pub_local_plan = rospy.Publisher('/local_plan', Float32MultiArray, queue_size=14) #zbedit4
+
+        # self.__pub_start = rospy.Publisher('/cmd_move', Bool, queue_size=14) #zbedit4
+
+        
 
     def __replan_cb(self, event):
         if self.choose_goal_state():
@@ -101,13 +117,16 @@ class Local_Planner():
         self.curr_pose_lock.release()
 
     def __obs_cb(self, data):
+        # rospy.loginfo("zbcheck: in __obs_cb") #zbedit4 for print
         self.obstacle_lock.acquire()
         self.ob = []
         # size = int(len(data.data) / 5) //original
         # size = int(len(data.data) / 10) #zbedit4
         size = int(len(data.data) / 7) #zbedit4try
-        # print("size: ", size, end=" ") 
-        rospy.loginfo("size: %.1f" % (size)) #zbedit4 for print
+        # rospy.loginfo("len(data.data): %.1f" % (len(data.data))) #zbedit4 for print
+        # for q in range(0,14):
+        #     rospy.loginfo("data.data[%.1f]: %.1f" % (q, data.data[q])) #zbedit4 for print
+        # rospy.loginfo("size: %.1f" % (size)) #zbedit4 for print
         for i in range(size):
             # self.ob.append(np.array(data.data[5*i:5*i+5])) //original
             # self.ob.append(np.array(data.data[10*i:10*i+10])) #zbedit4
@@ -311,6 +330,15 @@ class Local_Planner():
         def f(x_, u_): return ca.vertcat(*[u_[0] * ca.cos(x_[2]), u_[0] * ca.sin(x_[2]), u_[1]])
 
         def exceed_ob(ob_):
+            #zbedit4 check:
+            # rospy.loginfo("ob_[0]: %.1f" % (ob_[0])) #zbedit4 for print
+            # rospy.loginfo("ob_[1]: %.1f" % (ob_[1])) #zbedit4 for print
+            # rospy.loginfo("ob_[2]: %.1f" % (ob_[2])) #zbedit4 for print
+            # rospy.loginfo("ob_[3]: %.1f" % (ob_[3])) #zbedit4 for print
+            # rospy.loginfo("ob_[4]: %.1f" % (ob_[4])) #zbedit4 for print
+            # rospy.loginfo("ob_[5]: %.1f" % (ob_[5])) #zbedit4 for print
+            # rospy.loginfo("ob_[6]: %.1f" % (ob_[6])) #zbedit4 for print
+
             #original:
             # l_long_axis = ob_[2]
             # l_short_axis = ob_[3]
@@ -324,7 +352,7 @@ class Local_Planner():
             #zbedit4try:
             l_long_axis = ob_[2] + ob_[4] #should represent sigma_h+sigma_r
             l_short_axis = 2*ob_[3] #should represent 2*sigma_s
-            long_axis = np.array([np.cos(ob_[6]) * l_long_axis, np.sin(ob_[6]) * l_long_axis])
+            long_axis = np.array([np.cos(ob_[5]) * l_long_axis, np.sin(ob_[5]) * l_long_axis])
 
             ob_vec = np.array([ob_[0], ob_[1]])
             center_vec = self.goal_state[self.N-1, :2] - ob_vec
@@ -363,8 +391,8 @@ class Local_Planner():
             # b = ca.MX([2*ob_[7]])
 
             #zbedit4try:
-            c = ca.cos(ob_[6])
-            s = ca.sin(ob_[6])
+            c = ca.cos(ob_[5])
+            s = ca.sin(ob_[5])
             a = ca.MX([ob_[2] + ob_[4]])
             b = ca.MX([2*ob_[3]])
 
@@ -396,6 +424,10 @@ class Local_Planner():
             opti.subject_to(opt_states[i + 1, :] == x_next)
 
         num_obs = int(len(self.ob)/self.N)
+        # rospy.loginfo("len(self.ob): %.1f" % (len(self.ob))) #zbedit4 for print
+        # rospy.loginfo("self.N: %.1f" % (self.N)) #zbedit4 for print
+        # rospy.loginfo("num_obs: %.1f" % (num_obs)) #zbedit4 for print
+        
 
         #original:
         # for j in range(num_obs):

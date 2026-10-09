@@ -28,7 +28,7 @@ echo " "
 rm -f MUMPS*.tgz
 
 echo "Downloading the source code from ..."
-# $wgetcmd http://graal.ens-lyon.fr/MUMPS/MUMPS_${mumps_ver}.tar.gz
+wget http://coin-or-tools.github.io/ThirdParty-Mumps/MUMPS_${mumps_ver}.tar.gz || wget http://mumps.enseeiht.fr/MUMPS_${mumps_ver}.tar.gz
 
 echo "Uncompressing the tarball..."
 gunzip -f MUMPS_${mumps_ver}.tar.gz

@@ -34,7 +34,7 @@ CXX = g++
 CXXFLAGS = -O3 -pipe -DNDEBUG -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion -Wno-unknown-pragmas -Wno-long-long   -DIPOPT_BUILD
 
 # additional C++ Compiler options for linking
-CXXLINKFLAGS =  -Wl,--rpath -Wl,/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib
+CXXLINKFLAGS =  -Wl,--rpath -Wl,/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib
 
 SRCDIR = ../../../../../../Ipopt/contrib/sIPOPT/examples/redhess_cpp
 ipoptsrcdir  = $(SRCDIR)/../../../../src
@@ -42,13 +42,13 @@ senssrcdir = $(SRCDIR)/../../src
 
 # Include directories (we use the CYGPATH_W variables to allow compilation with Windows compilers)
 #   we also need some Ipopt headers that are not installed, so we add $(ipoptsrcdir)/Algorithm and $(ipoptsrcdir)/LinAlg
-INCL = `PKG_CONFIG_PATH=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/yfx/simulation/devel/lib/pkgconfig:/home/yfx/fetch_ws_cm/devel/lib/pkgconfig:/home/yfx/fetch_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --cflags ipopt` -I`$(CYGPATH_W) $(ipoptsrcdir)/Algorithm` -I`$(CYGPATH_W) $(ipoptsrcdir)/LinAlg` -I`$(CYGPATH_W) $(senssrcdir)` $(ADDINCFLAGS)
-#INCL = -I`$(CYGPATH_W) /home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/include/coin`  -I`$(CYGPATH_W) $(ipoptsrcdir)/Algorithm` -I`$(CYGPATH_W) $(ipoptsrcdir)/LinAlg` -I`$(CYGPATH_W) $(senssrcdir)` $(ADDINCFLAGS)
+INCL = `PKG_CONFIG_PATH=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/surik-wheelchair/catkin_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --cflags ipopt` -I`$(CYGPATH_W) $(ipoptsrcdir)/Algorithm` -I`$(CYGPATH_W) $(ipoptsrcdir)/LinAlg` -I`$(CYGPATH_W) $(senssrcdir)` $(ADDINCFLAGS)
+#INCL = -I`$(CYGPATH_W) /home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/include/coin`  -I`$(CYGPATH_W) $(ipoptsrcdir)/Algorithm` -I`$(CYGPATH_W) $(ipoptsrcdir)/LinAlg` -I`$(CYGPATH_W) $(senssrcdir)` $(ADDINCFLAGS)
 
 # Linker flags
-LIBS = -lsipopt `PKG_CONFIG_PATH=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/yfx/simulation/devel/lib/pkgconfig:/home/yfx/fetch_ws_cm/devel/lib/pkgconfig:/home/yfx/fetch_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --libs ipopt`
-##LIBS = -link -libpath:`$(CYGPATH_W) /home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib` libsipopt.lib libipopt.lib -llapack -lblas -lm  -ldl
-#LIBS = -L/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib -lsipopt -lipopt -llapack -lblas -lm  -ldl
+LIBS = -lsipopt `PKG_CONFIG_PATH=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/surik-wheelchair/catkin_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --libs ipopt`
+##LIBS = -link -libpath:`$(CYGPATH_W) /home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib` libsipopt.lib libipopt.lib -llapack -lblas -lm  -ldl
+#LIBS = -L/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib -lsipopt -lipopt -llapack -lblas -lm  -ldl
 
 # The following is necessary under cygwin, if native compilers are used
 CYGPATH_W = echo

@@ -17,18 +17,18 @@ CXXFLAGS = -O3 -pipe -DNDEBUG -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpo
 CXXAR = ar cru
 
 # additional C++ Compiler options for linking
-CXXLINKFLAGS =  -Wl,--rpath -Wl,/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib
+CXXLINKFLAGS =  -Wl,--rpath -Wl,/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib
 
 # Include directories (we use the CYGPATH_W variables to allow compilation with Windows compilers)
-INCL = `PKG_CONFIG_PATH=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/yfx/simulation/devel/lib/pkgconfig:/home/yfx/fetch_ws_cm/devel/lib/pkgconfig:/home/yfx/fetch_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --cflags ipopt` $(ADDINCFLAGS) -I. -DHAVE_CONFIG_H
-#INCL = -I`$(CYGPATH_W) /home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/include/coin`  $(ADDINCFLAGS) -I. -DHAVE_CONFIG_H
+INCL = `PKG_CONFIG_PATH=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/surik-wheelchair/catkin_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --cflags ipopt` $(ADDINCFLAGS) -I. -DHAVE_CONFIG_H
+#INCL = -I`$(CYGPATH_W) /home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/include/coin`  $(ADDINCFLAGS) -I. -DHAVE_CONFIG_H
 
 LIB = libscalexamples.a
 
 # Linker flags
-LIBS = $(LIB) `PKG_CONFIG_PATH=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/yfx/simulation/devel/lib/pkgconfig:/home/yfx/fetch_ws_cm/devel/lib/pkgconfig:/home/yfx/fetch_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --libs ipopt`
-##LIBS = $(LIB) -link -libpath:`$(CYGPATH_W) /home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib` libipopt.lib -llapack -lblas -lm  -ldl
-#LIBS = $(LIB) -L/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib -lipopt -llapack -lblas -lm  -ldl
+LIBS = $(LIB) `PKG_CONFIG_PATH=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/surik-wheelchair/catkin_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --libs ipopt`
+##LIBS = $(LIB) -link -libpath:`$(CYGPATH_W) /home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib` libipopt.lib -llapack -lblas -lm  -ldl
+#LIBS = $(LIB) -L/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib -lipopt -llapack -lblas -lm  -ldl
 
 # Name of the executable
 EXE = solve_problem

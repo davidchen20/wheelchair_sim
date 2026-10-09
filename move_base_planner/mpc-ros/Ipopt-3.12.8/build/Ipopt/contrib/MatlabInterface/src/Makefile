@@ -29,21 +29,21 @@ MEX = $(MATLAB_HOME)/bin/mex
 #############################################################################
 # Do not modify anything below unless you know what you're doing.
 exec_prefix = ${prefix}
-prefix      = /home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build
+prefix      = /home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build
 libdir      = ${exec_prefix}/lib
 
 CXX         = g++
 CXXFLAGS    = -O3 -pipe -DNDEBUG -Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion -Wno-unknown-pragmas -Wno-long-long   -DIPOPT_BUILD -DMATLAB_MEXFILE # -DMWINDEXISINT
-LDFLAGS     = $(CXXFLAGS)  -Wl,--rpath -Wl,/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib  #-static-libgcc -static-libstdc++
+LDFLAGS     = $(CXXFLAGS)  -Wl,--rpath -Wl,/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib  #-static-libgcc -static-libstdc++
 
 # Include directories (we use the CYGPATH_W variables to allow compilation with Windows compilers)
-INCL = `PKG_CONFIG_PATH=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/yfx/simulation/devel/lib/pkgconfig:/home/yfx/fetch_ws_cm/devel/lib/pkgconfig:/home/yfx/fetch_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --cflags ipopt`
-#INCL = -I`$(CYGPATH_W) /home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/include/coin` 
+INCL = `PKG_CONFIG_PATH=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/surik-wheelchair/catkin_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --cflags ipopt`
+#INCL = -I`$(CYGPATH_W) /home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/include/coin` 
 
 # Linker flags
-LIBS = `PKG_CONFIG_PATH=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/yfx/simulation/devel/lib/pkgconfig:/home/yfx/fetch_ws_cm/devel/lib/pkgconfig:/home/yfx/fetch_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --libs ipopt | sed -e 's/-framework vecLib//g'`
-##LIBS = -link -libpath:`$(CYGPATH_W) /home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib` libipopt.lib -llapack -lblas -lm  -ldl
-#LIBS = -L/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/lib -lipopt `echo -llapack -lblas -lm  -ldl | sed -e 's/-framework vecLib//g'`
+LIBS = `PKG_CONFIG_PATH=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib64/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib/pkgconfig:/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/share/pkgconfig:/home/surik-wheelchair/catkin_ws/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig pkg-config --libs ipopt | sed -e 's/-framework vecLib//g'`
+##LIBS = -link -libpath:`$(CYGPATH_W) /home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib` libipopt.lib -llapack -lblas -lm  -ldl
+#LIBS = -L/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/lib -lipopt `echo -llapack -lblas -lm  -ldl | sed -e 's/-framework vecLib//g'`
 LIBS_STATIC = $(LIBS)
 #LIBS_STATIC = $$(echo " $(LIBS) " | sed -e "s| -lgfortran | `gfortran -print-file-name=libgfortran.a` |g" -e "s| -lquadmath | `gfortran -print-file-name=libquadmath.a` |g")
 ##LIBS_STATIC = $$(echo " $(LIBS) " | sed -e 's| -Wl,-Bdynamic,-lmwma57,-Bstatic | -lmwma57 |g')

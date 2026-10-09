@@ -1,5 +1,5 @@
-prefix=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build
-libdir=/home/yfx/simulation/src/mpc-ros/Ipopt-3.12.8/build/ThirdParty/Blas
+prefix=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build
+libdir=/home/surik-wheelchair/catkin_ws/src/wheelchair_sim/move_base_planner/mpc-ros/Ipopt-3.12.8/build/ThirdParty/Blas
 
 Name: Blas
 Description: Basic linear algebra package

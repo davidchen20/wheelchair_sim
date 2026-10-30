@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>wheelchair_maneuvering</name>
+  <version>0.1.0</version>
+  <description>Autonomous maneuvering experiments using the move_base action.</description>
+  <maintainer email="surik-wheelchair@example.com">Wheelchair simulation team</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>actionlib</exec_depend>
+  <exec_depend>actionlib_msgs</exec_depend>
+  <exec_depend>move_base_msgs</exec_depend>
+</package>

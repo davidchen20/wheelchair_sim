@@ -1,0 +1,38 @@
+<launch>
+  <!-- Accept the arguments passed by wheelchair_navigation.launch. -->
+  <arg name="model" default="waffle"/>
+  <arg name="move_forward_only" default="false"/>
+
+  <node pkg="move_base" type="move_base" name="move_base" output="screen" clear_params="true">
+    <!-- Keep the baseline costmaps so this experiment changes the controller. -->
+    <rosparam file="$(find wheelchair_navigation)/params/mpc_params/costmap_common_params.yaml" command="load" ns="global_costmap"/>
+    <rosparam file="$(find wheelchair_navigation)/params/mpc_params/costmap_common_params.yaml" command="load" ns="local_costmap"/>
+    <rosparam file="$(find wheelchair_navigation)/params/mpc_params/global_costmap_params.yaml" command="load"/>
+    <rosparam file="$(find wheelchair_navigation)/params/mpc_params/local_costmap_params.yaml" command="load"/>
+    <rosparam file="$(find wheelchair_navigation)/params/teb_planner_params/diff_drive/teb_local_planner_params.yaml" command="load"/>
+
+    <param name="base_global_planner" value="global_planner/GlobalPlanner"/>
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS"/>
+    <param name="planner_frequency" value="1.0"/>
+    <param name="controller_frequency" value="5.0"/>
+    <param name="controller_patience" value="15.0"/>
+
+    <!-- Slow lab baseline with an explicit stopped goal and heading tolerance. -->
+    <param name="TebLocalPlannerROS/max_vel_x" value="0.25"/>
+    <param name="TebLocalPlannerROS/max_vel_x_backwards" value="0.1"/>
+    <!-- Must be smaller than the reverse speed limit (0.1 m/s). -->
+    <param name="TebLocalPlannerROS/penalty_epsilon" value="0.02"/>
+    <!-- Clearance from the polygon boundary, rather than from a point robot. -->
+    <param name="TebLocalPlannerROS/min_obstacle_dist" value="0.20"/>
+    <param name="TebLocalPlannerROS/inflation_dist" value="0.30"/>
+    <param name="TebLocalPlannerROS/weight_kinematics_forward_drive" value="1000.0" if="$(arg move_forward_only)"/>
+    <param name="TebLocalPlannerROS/max_vel_theta" value="0.4"/>
+    <param name="TebLocalPlannerROS/xy_goal_tolerance" value="0.10"/>
+    <param name="TebLocalPlannerROS/yaw_goal_tolerance" value="0.10"/>
+    <param name="TebLocalPlannerROS/free_goal_vel" value="false"/>
+    <!-- Single-trajectory baseline to isolate candidate-route switching. -->
+    <param name="TebLocalPlannerROS/enable_homotopy_class_planning" value="false"/>
+    <param name="TebLocalPlannerROS/enable_multithreading" value="false"/>
+    <param name="TebLocalPlannerROS/max_number_classes" value="2"/>
+  </node>
+</launch>

@@ -1,0 +1,17 @@
+<launch>
+  <!-- Replaces navigation, not Gazebo. Do not also run another move_base. -->
+  <arg name="initial_pose_x" default="5.150847450733085"/>
+  <arg name="initial_pose_y" default="6.446909230418239"/>
+  <arg name="initial_pose_a" default="3.139226658721223"/>
+  <group>
+    <!-- Scoped remap reaches the move_base node in the included launch. -->
+    <remap from="/cmd_vel" to="/maneuver/cmd_vel"/>
+    <include file="$(find wheelchair_navigation)/launch/wheelchair_navigation_teb.launch">
+      <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+      <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+      <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+    </include>
+  </group>
+  <node pkg="wheelchair_maneuvering" type="command_selector.py"
+        name="command_selector" output="screen" required="true"/>
+</launch>

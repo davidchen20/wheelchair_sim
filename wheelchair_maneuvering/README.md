@@ -59,3 +59,70 @@ rostopic pub -1 /move_base/cancel actionlib_msgs/GoalID '{}'
 Next steps are command ownership, a maneuver task interface, and checking actual
 stopped motion before handing control back. This client alone does not disable
 shared control or prevent another client from replacing its goal.
+
+## Exclusive control experiment
+
+Stop the old navigation launch first. Keep Gazebo running. In its place run:
+
+```bash
+source ~/catkin_ws/devel/setup.bash
+roslaunch wheelchair_maneuvering exclusive_maneuvering.launch
+```
+
+Correct localization if the chair is no longer at its original spawn. This launch
+runs TEB navigation and the command selector. It starts in `stopped` mode.
+Check `rostopic info /cmd_vel`: its only publisher must be `/command_selector`.
+`move_base` must publish on `/maneuver/cmd_vel`, never directly on `/cmd_vel`.
+
+Then send a suitable goal with exclusive control:
+
+```bash
+rosrun wheelchair_maneuvering send_maneuver_goal.py --x 2.767 --y 6.261 --yaw-deg 0 --exclusive
+```
+
+The script acquires a unique control token and publishes its heartbeat. A second
+client cannot acquire control while a maneuver owns it. The selector blocks shared
+commands during maneuver mode, publishes zero for 0.25 seconds during handover,
+and outputs zero if selected commands are older than 2 wall-clock seconds. If the
+client heartbeat disappears for 2 seconds, it switches to stopped even if
+move_base continues sending commands. Unique tokens prevent an older client
+from releasing or renewing a newer client's lease. Ctrl+C cancels this client's
+goal and releases control. Completion also releases to `stopped`, not shared.
+
+Monitor mode with:
+
+```bash
+rostopic echo /control_mode
+```
+
+To immediately select stopped mode manually:
+
+```bash
+rosservice call /control/enable_maneuver "data: false"
+```
+
+The client then cancels its goal after observing loss of ownership. To explicitly
+enable shared mode after a maneuver:
+
+```bash
+rosservice call /control/enable_shared
+```
+
+This does not start a shared controller. When integrating the real shared-control
+node, remap its output to `/shared/cmd_vel` at launch (for example
+`/cmd_vel:=/shared/cmd_vel`). Every controller must go through the selector.
+The exclusive launch uses TEB, which does not blend `/user_cmd` into commands.
+Do not replace it with the existing shared MPC plugin without separately blocking
+its user-input blending for autonomous operation.
+
+All nodes with access to the ROS graph can still publish directly to `/cmd_vel`:
+this is application-level command selection, not access control. Selector process
+failure also requires a downstream motor command watchdog for deployment; this
+simulation experiment does not provide one. Avoid issuing RViz goals during an
+exclusive run, because they use the same move_base action server.
+
+Offline gate checks (no master or motion required):
+
+```bash
+python3 wheelchair_maneuvering/tests/test_command_gate.py
+```

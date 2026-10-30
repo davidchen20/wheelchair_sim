@@ -9,6 +9,8 @@ import actionlib
 import rospy
 from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from std_msgs.msg import String
+from std_srvs.srv import SetBool
 
 
 def arguments():
@@ -19,6 +21,8 @@ def arguments():
                         help='Absolute heading: 0 = map +x, 90 = map +y')
     parser.add_argument('--server', default='/move_base', help='Navigation action name')
     parser.add_argument('--dry-run', action='store_true', help='Print pose without sending it')
+    parser.add_argument('--exclusive', action='store_true',
+                        help='Acquire command selector control and release to stopped on exit')
     args = parser.parse_args(rospy.myargv()[1:])
     if not all(math.isfinite(value) for value in (args.x, args.y, args.yaw_deg)):
         parser.error('Coordinates and heading must be finite numbers')
@@ -45,8 +49,28 @@ def main():
     connected = threading.Event()
     result = {}
     goal_sent = False
+    lease = {'token': None, 'seen': False}
+    lease_lost = threading.Event()
+    heartbeat_stop = threading.Event()
+    heartbeat_pub = rospy.Publisher('/maneuver/heartbeat', String, queue_size=1)
+    release_pub = rospy.Publisher('/maneuver/release', String, queue_size=1)
+
+    def owner_changed(message):
+        if lease['token'] is not None:
+            if message.data == lease['token']:
+                lease['seen'] = True
+            elif lease['seen']:
+                lease_lost.set()
+
+    owner_sub = rospy.Subscriber('/control_owner', String, owner_changed, queue_size=1)
+
+    def release_control():
+        heartbeat_stop.set()
+        if lease['token']:
+            release_pub.publish(lease['token'])
 
     def cancel():
+        release_control()
         # Cancel only this client's goal, never all goals on the server.
         if goal_sent and not finished.is_set():
             rospy.logwarn('Requesting cancellation of this maneuver goal.')
@@ -67,6 +91,26 @@ def main():
     if rospy.is_shutdown():
         return 1
 
+    if args.exclusive:
+        try:
+            rospy.wait_for_service('/control/enable_maneuver', timeout=5.0)
+            response = rospy.ServiceProxy('/control/enable_maneuver', SetBool)(True)
+        except (rospy.ROSException, rospy.ServiceException) as error:
+            rospy.logerr('Cannot acquire command selector: %s', error)
+            return 1
+        if not response.success:
+            rospy.logerr('Control request rejected: %s', response.message)
+            return 1
+        lease['token'] = response.message
+
+        def heartbeat():
+            while not heartbeat_stop.is_set() and not rospy.is_shutdown():
+                heartbeat_pub.publish(lease['token'])
+                heartbeat_stop.wait(0.2)
+
+        threading.Thread(target=heartbeat, daemon=True).start()
+        rospy.loginfo('Exclusive maneuver control acquired; shared commands are blocked.')
+
     def done(state, unused_result):
         result['state'] = state
         result['text'] = client.get_goal_status_text()
@@ -80,6 +124,9 @@ def main():
         client.send_goal(goal, done_cb=done)
         rospy.loginfo('Goal sent. Ctrl+C cancels. Do not send another RViz goal during this test.')
         while not finished.wait(0.1):
+            if lease_lost.is_set():
+                rospy.logerr('Exclusive control lost; cancelling navigation.')
+                return 1
             if rospy.is_shutdown():
                 return 1
         if result['state'] == GoalStatus.SUCCEEDED:
